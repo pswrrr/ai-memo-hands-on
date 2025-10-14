@@ -5,3 +5,12 @@
 // 관련 파일: jest.config.js, __tests__/validations.test.ts, __tests__/SignupForm.test.tsx
 
 import '@testing-library/jest-dom'
+
+// Node.js 환경에서 setImmediate와 clearImmediate를 정의
+if (typeof setImmediate === 'undefined') {
+  global.setImmediate = (callback, ...args) => setTimeout(callback, 0, ...args);
+}
+
+if (typeof clearImmediate === 'undefined') {
+  global.clearImmediate = (id) => clearTimeout(id);
+}

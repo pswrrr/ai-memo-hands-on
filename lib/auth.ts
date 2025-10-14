@@ -10,7 +10,11 @@ import { AuthError } from '@supabase/supabase-js';
 export interface AuthResponse {
   success: boolean;
   error?: string;
-  user?: any;
+  user?: {
+    id: string;
+    email: string;
+    [key: string]: unknown;
+  };
 }
 
 // 회원가입 함수
@@ -50,7 +54,10 @@ export async function signUp(email: string, password: string): Promise<AuthRespo
     console.log('회원가입 성공:', data.user);
     return {
       success: true,
-      user: data.user,
+      user: data.user ? {
+        id: data.user.id,
+        email: data.user.email || '',
+      } : undefined,
     };
   } catch (error) {
     console.error('회원가입 예외:', error);
@@ -92,7 +99,10 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
 
     return {
       success: true,
-      user: data.user,
+      user: data.user ? {
+        id: data.user.id,
+        email: data.user.email || '',
+      } : undefined,
     };
   } catch (error) {
     console.error('💥 signIn 함수에서 예외 발생:', error);
@@ -187,7 +197,10 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
 
     return {
       success: true,
-      user: data.user,
+      user: data.user ? {
+        id: data.user.id,
+        email: data.user.email || '',
+      } : undefined,
     };
   } catch (error) {
     console.error('💥 updatePassword 함수에서 예외 발생:', error);
@@ -214,9 +227,16 @@ export async function getCurrentUser() {
 }
 
 // 인증 상태 변경 감지
-export function onAuthStateChange(callback: (user: any) => void) {
+export function onAuthStateChange(callback: (user: { id: string; email: string; [key: string]: unknown } | null) => void) {
   return supabase.auth.onAuthStateChange((event, session) => {
-    callback(session?.user ?? null);
+    if (session?.user) {
+      callback({
+        id: session.user.id,
+        email: session.user.email || '',
+      });
+    } else {
+      callback(null);
+    }
   });
 }
 

@@ -82,13 +82,13 @@ export default function SignupForm() {
       
       if (result.success) {
         // 회원가입 성공 메시지 표시
-        setSuccessMessage('회원가입이 완료되었습니다! 잠시 후 메인 페이지로 이동합니다.');
+        setSuccessMessage('회원가입이 완료되었습니다! 온보딩 페이지로 이동합니다.');
         
-        // 2초 후 메인 페이지로 리다이렉트
+        // 2초 후 온보딩 페이지로 리다이렉트
         setTimeout(() => {
-          console.log('메인 페이지로 리다이렉트 시작'); // 디버깅용 로그
+          console.log('온보딩 페이지로 리다이렉트 시작'); // 디버깅용 로그
           // window.location을 사용하여 강제로 페이지 전체를 새로고침
-          window.location.href = '/';
+          window.location.href = '/onboarding';
         }, 2000);
       } else {
         console.error('회원가입 에러:', result.error);
