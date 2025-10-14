@@ -15,6 +15,11 @@ export interface SignupFormData {
   confirmPassword: string;
 }
 
+export interface LoginFormData {
+  email: string;
+  password: string;
+}
+
 // 이메일 유효성 검사
 export function validateEmail(email: string): ValidationResult {
   if (!email) {
@@ -97,6 +102,25 @@ export function validateSignupForm(data: SignupFormData): { isValid: boolean; er
   const confirmPasswordValidation = validateConfirmPassword(data.password, data.confirmPassword);
   if (!confirmPasswordValidation.isValid) {
     errors.confirmPassword = confirmPasswordValidation.message!;
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors
+  };
+}
+
+// 로그인 폼 유효성 검사
+export function validateLoginForm(data: LoginFormData): { isValid: boolean; errors: Record<string, string> } {
+  const errors: Record<string, string> = {};
+
+  const emailValidation = validateEmail(data.email);
+  if (!emailValidation.isValid) {
+    errors.email = emailValidation.message!;
+  }
+
+  if (!data.password) {
+    errors.password = '비밀번호를 입력해주세요.';
   }
 
   return {

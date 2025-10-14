@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

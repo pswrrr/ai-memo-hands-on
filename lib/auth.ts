@@ -18,6 +18,12 @@ export async function signUp(email: string, password: string): Promise<AuthRespo
   try {
     console.log('회원가입 시도:', { email });
     
+    // 먼저 해당 이메일이 이미 존재하는지 확인
+    const { data: existingUsers } = await supabase
+      .from('auth.users')
+      .select('email')
+      .eq('email', email);
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -28,6 +34,16 @@ export async function signUp(email: string, password: string): Promise<AuthRespo
       return {
         success: false,
         error: getAuthErrorMessage(error),
+      };
+    }
+
+    // Supabase가 이메일 확인 대기 중인 임시 사용자를 생성하는 경우 체크
+    // identities가 비어있으면 이미 등록된 이메일일 가능성이 높음
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      console.log('중복 이메일 감지: identities가 비어있음');
+      return {
+        success: false,
+        error: '이미 등록된 이메일입니다.',
       };
     }
 
@@ -48,23 +64,38 @@ export async function signUp(email: string, password: string): Promise<AuthRespo
 // 로그인 함수
 export async function signIn(email: string, password: string): Promise<AuthResponse> {
   try {
+    console.log('🔐 [lib/auth.ts] signIn 함수 시작');
+    console.log('입력 받은 이메일:', email);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
+    console.log('Supabase signInWithPassword 응답:');
+    console.log('- data:', data);
+    console.log('- error:', error);
+    console.log('- data.session:', data?.session);
+    console.log('- data.user:', data?.user);
+
     if (error) {
+      console.error('로그인 에러 발생:', error);
       return {
         success: false,
         error: getAuthErrorMessage(error),
       };
     }
 
+    console.log('✅ 로그인 성공! 세션 생성됨');
+    console.log('세션 정보:', data.session);
+    console.log('유저 정보:', data.user);
+
     return {
       success: true,
       user: data.user,
     };
   } catch (error) {
+    console.error('💥 signIn 함수에서 예외 발생:', error);
     return {
       success: false,
       error: '로그인 중 오류가 발생했습니다.',
@@ -95,6 +126,78 @@ export async function signOut(): Promise<AuthResponse> {
   }
 }
 
+// 비밀번호 재설정 요청 함수
+export async function resetPassword(email: string): Promise<AuthResponse> {
+  try {
+    console.log('🔐 [lib/auth.ts] resetPassword 함수 시작');
+    console.log('입력 받은 이메일:', email);
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    });
+
+    console.log('Supabase resetPasswordForEmail 응답:');
+    console.log('- error:', error);
+
+    if (error) {
+      console.error('비밀번호 재설정 요청 에러 발생:', error);
+      return {
+        success: false,
+        error: getAuthErrorMessage(error),
+      };
+    }
+
+    console.log('✅ 비밀번호 재설정 이메일 전송 성공');
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error('💥 resetPassword 함수에서 예외 발생:', error);
+    return {
+      success: false,
+      error: '비밀번호 재설정 중 오류가 발생했습니다.',
+    };
+  }
+}
+
+// 비밀번호 업데이트 함수
+export async function updatePassword(newPassword: string): Promise<AuthResponse> {
+  try {
+    console.log('🔐 [lib/auth.ts] updatePassword 함수 시작');
+    
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    console.log('Supabase updateUser 응답:');
+    console.log('- data:', data);
+    console.log('- error:', error);
+
+    if (error) {
+      console.error('비밀번호 업데이트 에러 발생:', error);
+      return {
+        success: false,
+        error: getAuthErrorMessage(error),
+      };
+    }
+
+    console.log('✅ 비밀번호 업데이트 성공');
+    console.log('유저 정보:', data.user);
+
+    return {
+      success: true,
+      user: data.user,
+    };
+  } catch (error) {
+    console.error('💥 updatePassword 함수에서 예외 발생:', error);
+    return {
+      success: false,
+      error: '비밀번호 변경 중 오류가 발생했습니다.',
+    };
+  }
+}
+
 // 현재 사용자 정보 가져오기
 export async function getCurrentUser() {
   try {
@@ -119,8 +222,11 @@ export function onAuthStateChange(callback: (user: any) => void) {
 
 // Supabase Auth 에러 메시지를 사용자 친화적인 메시지로 변환
 function getAuthErrorMessage(error: AuthError): string {
+  console.log('===== Supabase Auth Error =====');
   console.log('원본 에러 메시지:', error.message);
   console.log('에러 코드:', error.status);
+  console.log('전체 에러 객체:', error);
+  console.log('==============================');
   
   // 에러 메시지를 소문자로 변환하여 매칭
   const message = error.message.toLowerCase();
