@@ -19,3 +19,9 @@ if (typeof setImmediate === 'undefined') {
 if (typeof clearImmediate === 'undefined') {
   global.clearImmediate = (id) => clearTimeout(id);
 }
+
+// Next.js 관련 폴리필
+global.Request = global.Request || class Request {};
+global.Response = global.Response || class Response {};
+global.Headers = global.Headers || class Headers {};
+global.fetch = global.fetch || jest.fn();
