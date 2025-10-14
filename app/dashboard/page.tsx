@@ -8,9 +8,10 @@ import WelcomeMessage from '@/components/dashboard/WelcomeMessage';
 import LogoutButton from '@/components/auth/LogoutButton';
 import SessionGuard from '@/components/auth/SessionGuard';
 import NoteList from '@/components/notes/NoteList';
+import SortSelect from '@/components/notes/SortSelect';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -110,13 +111,27 @@ export default async function DashboardPage() {
           <div className="mt-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">내 노트</h2>
-              <Link href="/dashboard/notes/new">
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  새 노트 작성
-                </Button>
-              </Link>
+              <div className="flex gap-2">
+                <Link href="/dashboard/trash">
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    휴지통
+                  </Button>
+                </Link>
+                <Link href="/dashboard/notes/new">
+                  <Button className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    새 노트 작성
+                  </Button>
+                </Link>
+              </div>
             </div>
+            
+            {/* 정렬 옵션 */}
+            <div className="mb-4">
+              <SortSelect />
+            </div>
+            
             <NoteList />
           </div>
         </div>

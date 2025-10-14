@@ -15,6 +15,13 @@
       "when": 1760414726811,
       "tag": "0001_tired_onslaught",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760416783342,
+      "tag": "0002_daily_colonel_america",
+      "breakpoints": true
     }
   ]
 }

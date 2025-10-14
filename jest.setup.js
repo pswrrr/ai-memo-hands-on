@@ -5,6 +5,11 @@
 // 관련 파일: jest.config.js, __tests__/validations.test.ts, __tests__/SignupForm.test.tsx
 
 import '@testing-library/jest-dom'
+import { TextEncoder, TextDecoder } from 'util';
+
+// Node.js 환경에서 Web API 폴리필 추가
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Node.js 환경에서 setImmediate와 clearImmediate를 정의
 if (typeof setImmediate === 'undefined') {

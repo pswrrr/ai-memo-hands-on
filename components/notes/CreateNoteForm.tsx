@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { createNote } from '@/app/actions/notes';
 import { createNoteSchema } from '@/lib/validations/notes';
+import { useAuth } from '@/hooks/useAuth';
+import { useAutoSaveDraft } from '@/hooks/useAutoSaveDraft';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import DraftBanner from './DraftBanner';
 import { Loader2, Save, Check } from 'lucide-react';
 
 interface CreateNoteFormProps {
@@ -20,9 +23,11 @@ interface CreateNoteFormProps {
 
 export default function CreateNoteForm({ onSuccess, onCancel }: CreateNoteFormProps = {}) {
   const router = useRouter();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
 
   const {
     register,
@@ -30,6 +35,7 @@ export default function CreateNoteForm({ onSuccess, onCancel }: CreateNoteFormPr
     formState: { errors },
     reset,
     watch,
+    setValue,
   } = useForm({
     resolver: zodResolver(createNoteSchema),
     defaultValues: {
@@ -41,6 +47,31 @@ export default function CreateNoteForm({ onSuccess, onCancel }: CreateNoteFormPr
   const watchedTitle = watch('title');
   const watchedContent = watch('content');
   const hasContent = watchedTitle.trim() || (watchedContent || '').trim();
+
+  // 임시 저장 훅 초기화
+  const { saveDraftNow, loadDraftData, clearDraftData, hasDraft } = useAutoSaveDraft({
+    userId: user?.id || '',
+  });
+
+  // 임시 저장된 데이터 로드
+  useEffect(() => {
+    if (user && hasDraft) {
+      setShowDraftBanner(true);
+    }
+  }, [user, hasDraft]);
+
+  // 폼 값 변경 시 자동 임시 저장 (2초 디바운스)
+  useEffect(() => {
+    if (!user) return;
+    
+    const timer = setTimeout(() => {
+      if (watchedTitle || watchedContent) {
+        saveDraftNow(watchedTitle, watchedContent || '');
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [watchedTitle, watchedContent, user, saveDraftNow]);
 
   const onSubmit = async (data: { title: string; content: string }) => {
     setIsSubmitting(true);
@@ -56,6 +87,8 @@ export default function CreateNoteForm({ onSuccess, onCancel }: CreateNoteFormPr
 
       if (result.success) {
         setSubmitStatus('success');
+        // 임시 저장 데이터 삭제
+        clearDraftData();
         reset();
         // 콜백 함수가 있으면 호출, 없으면 기본 리다이렉트
         if (onSuccess) {
@@ -90,6 +123,32 @@ export default function CreateNoteForm({ onSuccess, onCancel }: CreateNoteFormPr
     }
   };
 
+  // 임시 저장 복원 핸들러
+  const handleRestoreDraft = (draftData: any) => {
+    setValue('title', draftData.title);
+    setValue('content', draftData.content);
+    setShowDraftBanner(false);
+  };
+
+  // 임시 저장 삭제 핸들러
+  const handleDiscardDraft = () => {
+    clearDraftData();
+    setShowDraftBanner(false);
+  };
+
+  // 페이지 이탈 경고 (beforeunload)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasContent && !isSubmitting) {
+        e.preventDefault();
+        e.returnValue = ''; // Chrome requires returnValue to be set
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasContent, isSubmitting]);
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -99,6 +158,15 @@ export default function CreateNoteForm({ onSuccess, onCancel }: CreateNoteFormPr
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* 임시 저장 배너 */}
+        {showDraftBanner && hasDraft && user && (
+          <DraftBanner
+            draftData={loadDraftData()!}
+            onRestore={handleRestoreDraft}
+            onDiscard={handleDiscardDraft}
+          />
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* 제목 입력 */}
           <div className="space-y-2">

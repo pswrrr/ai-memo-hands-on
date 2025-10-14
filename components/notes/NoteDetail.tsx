@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Trash2, Calendar, Clock } from 'lucide-react';
 import NoteEditForm from './NoteEditForm';
+import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 interface Note {
   id: string;
@@ -27,6 +28,7 @@ interface NoteDetailProps {
 
 export default function NoteDetail({ note }: NoteDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // 날짜 포맷팅
   const formatDate = (date: Date) => {
@@ -109,7 +111,11 @@ export default function NoteDetail({ note }: NoteDetailProps) {
                   <Edit className="h-4 w-4 mr-2" />
                   수정
                 </Button>
-                <Button variant="destructive" size="sm">
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   삭제
                 </Button>
@@ -141,6 +147,14 @@ export default function NoteDetail({ note }: NoteDetailProps) {
           </div>
         </div>
       </div>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <DeleteConfirmDialog
+        noteId={note.id}
+        noteTitle={note.title}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+      />
     </div>
   );
 }

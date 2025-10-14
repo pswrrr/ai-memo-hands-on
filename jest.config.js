@@ -20,6 +20,12 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   setupFiles: ['<rootDir>/jest.env.js'],
+  testMatch: [
+    '**/__tests__/**/*.(test|spec).(ts|tsx)',
+  ],
+  testEnvironmentOptions: {
+    customExportConditions: [''],
+  },
 }
 
 // createJestConfig는 next/jest가 Next.js 설정을 로드할 수 있도록 비동기적으로 호출됩니다

@@ -6,12 +6,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getNotes } from '@/app/actions/notes';
+import { useSearchParams } from 'next/navigation';
+import { getNotes, type SortOption } from '@/app/actions/notes';
+import { checkOnboardingStatus } from '@/lib/onboarding';
 import NoteCard from './NoteCard';
 import Pagination from './Pagination';
 import EmptyState from './EmptyState';
 import LoadingState from './LoadingState';
 import ErrorState from './ErrorState';
+import { StickyNote } from 'lucide-react';
 
 interface Note {
   id: string;
@@ -39,19 +42,21 @@ interface NotesResponse {
 }
 
 export default function NoteList() {
+  const searchParams = useSearchParams();
   const [notes, setNotes] = useState<Note[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
 
   // 노트 목록 로드 함수
-  const loadNotes = async (page: number = 1) => {
+  const loadNotes = async (page: number = 1, sortBy: SortOption = 'newest') => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response: NotesResponse = await getNotes(page, 10);
+      const response: NotesResponse = await getNotes(page, 10, sortBy);
       
       if (response.success && response.data) {
         setNotes(response.data.notes);
@@ -70,18 +75,31 @@ export default function NoteList() {
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
-    loadNotes(page);
+    const sortBy = (searchParams.get('sort') as SortOption) || 'newest';
+    loadNotes(page, sortBy);
   };
 
   // 재시도 핸들러
   const handleRetry = () => {
-    loadNotes(currentPage);
+    const sortBy = (searchParams.get('sort') as SortOption) || 'newest';
+    loadNotes(currentPage, sortBy);
   };
 
-  // 초기 로드
+  // 온보딩 상태 확인
   useEffect(() => {
-    loadNotes(1);
+    const checkOnboarding = async () => {
+      const completed = await checkOnboardingStatus();
+      setIsOnboardingComplete(completed);
+    };
+    checkOnboarding();
   }, []);
+
+  // 초기 로드 및 URL 파라미터 변경 감지
+  useEffect(() => {
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const sortBy = (searchParams.get('sort') as SortOption) || 'newest';
+    loadNotes(page, sortBy);
+  }, [searchParams]);
 
   // 로딩 상태
   if (isLoading) {
@@ -95,7 +113,19 @@ export default function NoteList() {
 
   // 빈 상태
   if (notes.length === 0) {
-    return <EmptyState />;
+    return (
+      <EmptyState
+        icon={StickyNote}
+        title={isOnboardingComplete ? "아직 노트가 없습니다" : "AI 메모장에 오신 것을 환영합니다! 🎉"}
+        description={
+          isOnboardingComplete
+            ? "첫 번째 노트를 작성해보세요. 아이디어, 메모, 생각을 자유롭게 기록할 수 있습니다."
+            : "첫 번째 노트를 작성해보세요. 아이디어, 메모, 생각을 자유롭게 기록할 수 있습니다."
+        }
+        actionLabel={isOnboardingComplete ? "새 노트 작성" : "첫 노트 작성하기"}
+        actionHref="/dashboard/notes/new"
+      />
+    );
   }
 
   // 노트 목록 표시

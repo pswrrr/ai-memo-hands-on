@@ -12,6 +12,7 @@ export const notes = pgTable('notes', {
   content: text('content'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 
 // Note tags table
