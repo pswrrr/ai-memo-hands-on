@@ -151,6 +151,7 @@ export async function resetOnboardingStatus(): Promise<boolean> {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('onboarding_completed');
       localStorage.removeItem('onboarding_step');
+      localStorage.removeItem('onboarding');
       console.log('✅ [lib/onboarding.ts] 로컬 스토리지 초기화 완료');
     }
 
@@ -180,6 +181,39 @@ export async function resetOnboardingStatus(): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('❌ [lib/onboarding.ts] 온보딩 상태 초기화 중 오류:', error);
+    return false;
+  }
+}
+
+/**
+ * 온보딩 상태를 로컬 스토리지에서 가져오기 (테스트용)
+ * @returns 온보딩 상태 객체 또는 null
+ */
+export function getOnboardingStateFromStorage(): any {
+  try {
+    if (typeof window === 'undefined') return null;
+    
+    const stored = localStorage.getItem('onboarding');
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error('❌ [lib/onboarding.ts] 온보딩 상태 가져오기 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * 온보딩 상태를 로컬 스토리지에 저장 (테스트용)
+ * @param state 온보딩 상태 객체
+ * @returns 저장 성공 여부
+ */
+export function setOnboardingStateToStorage(state: any): boolean {
+  try {
+    if (typeof window === 'undefined') return false;
+    
+    localStorage.setItem('onboarding', JSON.stringify(state));
+    return true;
+  } catch (error) {
+    console.error('❌ [lib/onboarding.ts] 온보딩 상태 저장 실패:', error);
     return false;
   }
 }

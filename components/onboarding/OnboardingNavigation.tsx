@@ -40,9 +40,14 @@ export default function OnboardingNavigation({
       <div>
         <button
           onClick={onSkip}
-          className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+          className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg border border-gray-300 hover:border-gray-400 transition-all duration-200 text-sm font-medium"
         >
-          건너뛰기
+          <span className="flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            건너뛰기
+          </span>
         </button>
       </div>
 
