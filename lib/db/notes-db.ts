@@ -595,13 +595,40 @@ async function getSummaryByNoteId(
 async function getTagsByNoteId(
   noteId: string
 ): Promise<NoteTag[]> {
-  const tags = await db
-    .select()
-    .from(noteTags)
-    .where(eq(noteTags.noteId, noteId))
-    .orderBy(desc(noteTags.createdAt));
+  try {
+    // 1. 직접 연결 시도
+    const connection = await getDatabaseConnection();
+    
+    if (connection.type === 'direct') {
+      console.log('🏷️ Drizzle ORM 직접 연결을 통한 태그 조회');
+      const tags = await connection.connection
+        .select()
+        .from(noteTags)
+        .where(eq(noteTags.noteId, noteId))
+        .orderBy(desc(noteTags.createdAt));
+      
+      return tags;
+    }
+  } catch (error) {
+    console.log('⚠️ Drizzle ORM 직접 연결 실패, Supabase 클라이언트 사용:', error instanceof Error ? error.message : '알 수 없는 오류');
+  }
+
+  // 2. Supabase 클라이언트를 통한 대안 조회
+  console.log('🏷️ Supabase 클라이언트를 통한 태그 조회');
+  const supabase = await createServerSupabase();
   
-  return tags;
+  const { data, error } = await supabase
+    .from('note_tags')
+    .select('*')
+    .eq('note_id', noteId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Supabase 태그 조회 오류:', error);
+    throw error;
+  }
+
+  return data || [];
 }
 
 // 태그 일괄 교체 (기존 삭제 후 새로 삽입)
@@ -609,32 +636,80 @@ async function replaceTags(
   noteId: string,
   tags: string[]
 ): Promise<NoteTag[]> {
-  // 트랜잭션으로 처리
-  const result = await db.transaction(async (tx) => {
-    // 기존 태그 삭제
-    await tx
-      .delete(noteTags)
-      .where(eq(noteTags.noteId, noteId));
+  try {
+    // 1. 직접 연결 시도
+    const connection = await getDatabaseConnection();
+    
+    if (connection.type === 'direct') {
+      console.log('🏷️ Drizzle ORM 직접 연결을 통한 태그 교체');
+      
+      // 트랜잭션으로 처리
+      const result = await connection.connection.transaction(async (tx) => {
+        // 기존 태그 삭제
+        await tx
+          .delete(noteTags)
+          .where(eq(noteTags.noteId, noteId));
 
-    if (tags.length === 0) {
-      return [];
+        if (tags.length === 0) {
+          return [];
+        }
+
+        // 새 태그 삽입 (최대 6개)
+        const tagValues = tags.slice(0, 6).map(tag => ({
+          noteId,
+          tag,
+        }));
+
+        const newTags = await tx
+          .insert(noteTags)
+          .values(tagValues)
+          .returning();
+
+        return newTags;
+      });
+
+      return result;
     }
+  } catch (error) {
+    console.log('⚠️ Drizzle ORM 직접 연결 실패, Supabase 클라이언트 사용:', error instanceof Error ? error.message : '알 수 없는 오류');
+  }
 
-    // 새 태그 삽입 (최대 6개)
-    const tagValues = tags.slice(0, 6).map(tag => ({
-      noteId,
-      tag,
-    }));
+  // 2. Supabase 클라이언트를 통한 대안 교체
+  console.log('🏷️ Supabase 클라이언트를 통한 태그 교체');
+  const supabase = await createServerSupabase();
+  
+  // 기존 태그 삭제
+  const { error: deleteError } = await supabase
+    .from('note_tags')
+    .delete()
+    .eq('note_id', noteId);
 
-    const newTags = await tx
-      .insert(noteTags)
-      .values(tagValues)
-      .returning();
+  if (deleteError) {
+    console.error('Supabase 태그 삭제 오류:', deleteError);
+    throw deleteError;
+  }
 
-    return newTags;
-  });
+  if (tags.length === 0) {
+    return [];
+  }
 
-  return result;
+  // 새 태그 삽입 (최대 6개)
+  const tagValues = tags.slice(0, 6).map(tag => ({
+    note_id: noteId,
+    tag,
+  }));
+
+  const { data, error: insertError } = await supabase
+    .from('note_tags')
+    .insert(tagValues)
+    .select();
+
+  if (insertError) {
+    console.error('Supabase 태그 삽입 오류:', insertError);
+    throw insertError;
+  }
+
+  return data || [];
 }
 
 // 요약 업데이트 (기존 요약이 있으면 업데이트, 없으면 생성)
