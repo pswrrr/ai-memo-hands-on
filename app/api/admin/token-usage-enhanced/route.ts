@@ -1,13 +1,13 @@
 /**
- * 관리자 토큰 사용량 API
- * GET /api/admin/token-usage?period=daily|weekly|monthly
+ * 향상된 관리자 토큰 사용량 API (시간대 문제 해결)
+ * GET /api/admin/token-usage-enhanced?period=daily|weekly|monthly&timezone=Asia/Seoul
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabase } from '@/lib/supabase-server';
 import { db } from '@/lib/db';
 import { tokenUsage } from '@/lib/db/schema';
-import { sql, and, gte, lte } from 'drizzle-orm';
+import { sql, and, gte, lte, desc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,25 +34,43 @@ export async function GET(request: NextRequest) {
     // 2. 쿼리 파라미터 확인
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || 'daily';
+    const timezone = searchParams.get('timezone') || 'Asia/Seoul';
 
-    // 3. 기간 설정 (Vercel 환경 대응)
+    // 3. 시간대를 고려한 기간 설정
     const now = new Date();
     const isVercel = !!(process.env.VERCEL || process.env.VERCEL_ENV);
     let startDate: Date;
     let endDate: Date;
 
+    // 시간대 변환 함수
+    const convertToTimezone = (date: Date, targetTimezone: string) => {
+      const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+      const targetTime = new Date(utc + (getTimezoneOffset(targetTimezone) * 60000));
+      return targetTime;
+    };
+
+    const getTimezoneOffset = (timezone: string): number => {
+      const now = new Date();
+      const utc = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+      const target = new Date(utc.toLocaleString("en-US", { timeZone: timezone }));
+      return (target.getTime() - utc.getTime()) / 60000;
+    };
+
     switch (period) {
       case 'daily':
         if (isVercel) {
-          // Vercel 환경에서는 한국 시간대(KST) 기준으로 조회
-          // 한국 시간대는 UTC+9이므로 UTC에서 9시간을 빼서 계산
-          const kstNow = new Date(now.getTime() - (9 * 60 * 60 * 1000));
-          startDate = new Date(kstNow);
-          startDate.setUTCHours(0, 0, 0, 0);
-          endDate = new Date(kstNow);
-          endDate.setUTCHours(23, 59, 59, 999);
+          // Vercel 환경에서는 클라이언트 시간대를 고려
+          const clientNow = convertToTimezone(now, timezone);
+          startDate = new Date(clientNow);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(clientNow);
+          endDate.setHours(23, 59, 59, 999);
+          
+          // UTC로 변환
+          startDate = new Date(startDate.getTime() - (getTimezoneOffset(timezone) * 60000));
+          endDate = new Date(endDate.getTime() - (getTimezoneOffset(timezone) * 60000));
         } else {
-          // 로컬 환경에서는 로컬 시간 기준으로 조회
+          // 로컬 환경에서는 로컬 시간 기준
           startDate = new Date(now);
           startDate.setHours(0, 0, 0, 0);
           endDate = new Date(now);
@@ -61,16 +79,19 @@ export async function GET(request: NextRequest) {
         break;
       case 'weekly':
         if (isVercel) {
-          // Vercel 환경에서는 UTC 시간 기준으로 조회
-          const dayOfWeek = now.getUTCDay();
-          startDate = new Date(now);
-          startDate.setUTCDate(now.getUTCDate() - dayOfWeek);
-          startDate.setUTCHours(0, 0, 0, 0);
+          const clientNow = convertToTimezone(now, timezone);
+          const dayOfWeek = clientNow.getDay();
+          startDate = new Date(clientNow);
+          startDate.setDate(clientNow.getDate() - dayOfWeek);
+          startDate.setHours(0, 0, 0, 0);
           endDate = new Date(startDate);
-          endDate.setUTCDate(startDate.getUTCDate() + 6);
-          endDate.setUTCHours(23, 59, 59, 999);
+          endDate.setDate(startDate.getDate() + 6);
+          endDate.setHours(23, 59, 59, 999);
+          
+          // UTC로 변환
+          startDate = new Date(startDate.getTime() - (getTimezoneOffset(timezone) * 60000));
+          endDate = new Date(endDate.getTime() - (getTimezoneOffset(timezone) * 60000));
         } else {
-          // 로컬 환경에서는 로컬 시간 기준으로 조회
           const dayOfWeek = now.getDay();
           startDate = new Date(now);
           startDate.setDate(now.getDate() - dayOfWeek);
@@ -82,11 +103,14 @@ export async function GET(request: NextRequest) {
         break;
       case 'monthly':
         if (isVercel) {
-          // Vercel 환경에서는 UTC 시간 기준으로 조회
-          startDate = new Date(now.getUTCFullYear(), now.getUTCMonth(), 1);
-          endDate = new Date(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999);
+          const clientNow = convertToTimezone(now, timezone);
+          startDate = new Date(clientNow.getFullYear(), clientNow.getMonth(), 1);
+          endDate = new Date(clientNow.getFullYear(), clientNow.getMonth() + 1, 0, 23, 59, 59, 999);
+          
+          // UTC로 변환
+          startDate = new Date(startDate.getTime() - (getTimezoneOffset(timezone) * 60000));
+          endDate = new Date(endDate.getTime() - (getTimezoneOffset(timezone) * 60000));
         } else {
-          // 로컬 환경에서는 로컬 시간 기준으로 조회
           startDate = new Date(now.getFullYear(), now.getMonth(), 1);
           endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         }
@@ -98,12 +122,13 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    // 디버깅 로그 추가
-    console.log(`🔍 토큰 사용량 조회 (${period}):`, {
+    // 디버깅 로그
+    console.log(`🔍 향상된 토큰 사용량 조회 (${period}):`, {
       environment: isVercel ? 'vercel' : 'local',
+      timezone,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      originalNow: now.toISOString()
     });
 
     // 4. Drizzle ORM으로 전체 시스템 통계 조회
@@ -133,14 +158,18 @@ export async function GET(request: NextRequest) {
       avgProcessingTime: 0
     };
 
-    // 5. 사용자별 사용량 랭킹 (Drizzle ORM)
-    const userRankingsData = await db
+    // 5. 사용자별 사용량 랭킹
+    const userRankings = await db
       .select({
         userId: tokenUsage.userId,
+        userEmail: sql<string>`COALESCE(
+          (SELECT email FROM auth.users WHERE id = ${tokenUsage.userId}),
+          'Unknown User'
+        )`,
         totalTokens: sql<number>`SUM(${tokenUsage.totalTokens})`,
         totalCost: sql<string>`SUM(${tokenUsage.cost})`,
         requestCount: sql<number>`COUNT(*)`,
-        lastActivity: sql<Date>`MAX(${tokenUsage.createdAt})`
+        lastActivity: sql<string>`MAX(${tokenUsage.createdAt})`
       })
       .from(tokenUsage)
       .where(
@@ -153,64 +182,41 @@ export async function GET(request: NextRequest) {
       .orderBy(sql`SUM(${tokenUsage.totalTokens}) DESC`)
       .limit(10);
 
-    // 사용자 이메일 정보 가져오기 (RPC 함수 사용)
-    const userIds = userRankingsData.map(u => u.userId);
-    const { data: usersData, error: usersError } = await supabase
-      .rpc('get_user_emails', { user_ids: userIds });
-    
-    console.log('📧 조회된 사용자 수:', usersData?.length);
-    console.log('📧 조회 에러:', usersError);
-    
-    const userEmailMap = new Map<string, string>();
-    usersData?.forEach((user: any) => {
-      console.log('👤 User ID:', user.id, '| Email:', user.email);
-      userEmailMap.set(user.id, user.email || user.id);
-    });
-
-    console.log('📊 랭킹 사용자 IDs:', userIds);
-    
-    const userRankingsResult = userRankingsData.map(user => {
-      const email = userEmailMap.get(user.userId) || user.userId;
-      console.log('🔍 Mapping:', user.userId, '→', email);
-      return {
-        userId: user.userId,
-        userEmail: email,
-        totalTokens: Number(user.totalTokens) || 0,
-        totalCost: parseFloat(user.totalCost) || 0,
-        requestCount: Number(user.requestCount) || 0,
-        lastActivity: user.lastActivity
-      };
-    });
-
-    // 6. 최근 알림 조회 (임시로 빈 배열 반환)
+    // 6. 최근 알림 (빈 배열로 초기화)
     const recentAlerts: any[] = [];
 
-    // 7. 응답 데이터 포맷
-    const response = {
+    return NextResponse.json({
+      success: true,
       stats: {
-        totalTokens: Number(stats.totalTokens) || 0,
-        totalCost: parseFloat(stats.totalCost) || 0,
-        requestCount: Number(stats.requestCount) || 0,
-        successCount: Number(stats.successCount) || 0,
-        errorCount: Number(stats.errorCount) || 0,
-        avgProcessingTime: Math.round(Number(stats.avgProcessingTime) || 0),
+        ...stats,
         period: {
-          start: startDate,
-          end: endDate
+          start: startDate.toISOString(),
+          end: endDate.toISOString()
         }
       },
-      userRankings: userRankingsResult,
-      recentAlerts
-    };
-
-    return NextResponse.json(response);
+      userRankings: userRankings.map(user => ({
+        ...user,
+        lastActivity: new Date(user.lastActivity)
+      })),
+      recentAlerts,
+      debug: {
+        environment: isVercel ? 'vercel' : 'local',
+        timezone,
+        timeRange: {
+          start: startDate.toISOString(),
+          end: endDate.toISOString()
+        }
+      }
+    });
 
   } catch (error) {
-    console.error('토큰 사용량 조회 실패:', error);
+    console.error('토큰 사용량 조회 오류:', error);
     return NextResponse.json(
-      { error: '토큰 사용량 조회 중 오류가 발생했습니다.' },
+      { 
+        error: '토큰 사용량 조회 실패',
+        details: error instanceof Error ? error.message : '알 수 없는 오류'
+      },
       { status: 500 }
     );
   }
 }
-
