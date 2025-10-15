@@ -85,20 +85,32 @@ export default function NoteList() {
     loadNotes(currentPage, sortBy);
   };
 
-  // 온보딩 상태 확인
+  // 초기 로드 및 URL 파라미터 변경 감지 (온보딩 상태 확인 포함)
   useEffect(() => {
-    const checkOnboarding = async () => {
-      const completed = await checkOnboardingStatus();
-      setIsOnboardingComplete(completed);
+    const initializeData = async () => {
+      try {
+        // 온보딩 상태와 노트 로드를 병렬로 처리
+        const [completed] = await Promise.all([
+          checkOnboardingStatus(),
+          (() => {
+            const page = parseInt(searchParams.get('page') || '1', 10);
+            const sortBy = (searchParams.get('sort') as SortOption) || 'newest';
+            return loadNotes(page, sortBy);
+          })()
+        ]);
+        
+        setIsOnboardingComplete(completed);
+      } catch (error) {
+        console.error('초기화 중 오류:', error);
+        // 오류가 발생해도 기본값으로 설정
+        setIsOnboardingComplete(false);
+        const page = parseInt(searchParams.get('page') || '1', 10);
+        const sortBy = (searchParams.get('sort') as SortOption) || 'newest';
+        loadNotes(page, sortBy);
+      }
     };
-    checkOnboarding();
-  }, []);
 
-  // 초기 로드 및 URL 파라미터 변경 감지
-  useEffect(() => {
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const sortBy = (searchParams.get('sort') as SortOption) || 'newest';
-    loadNotes(page, sortBy);
+    initializeData();
   }, [searchParams]);
 
   // 로딩 상태

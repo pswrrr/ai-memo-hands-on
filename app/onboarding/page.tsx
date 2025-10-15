@@ -66,11 +66,23 @@ export default function OnboardingPage() {
 
   const handleSkip = async () => {
     try {
+      console.log('🚀 온보딩 건너뛰기 시작');
+      
       // 온보딩 건너뛰기 처리
-      await saveOnboardingStatus(3, true);
+      const saved = await saveOnboardingStatus(3, true);
+      
+      if (saved) {
+        console.log('✅ 온보딩 상태 저장 성공');
+      } else {
+        console.log('⚠️ 온보딩 상태 저장 실패, 로컬 스토리지만 사용');
+      }
+      
+      // 저장 실패해도 대시보드로 이동
       router.push('/dashboard');
     } catch (error) {
       console.error('온보딩 건너뛰기 처리 중 오류:', error);
+      // 오류가 발생해도 대시보드로 이동
+      router.push('/dashboard');
     }
   };
 
