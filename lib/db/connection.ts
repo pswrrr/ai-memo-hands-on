@@ -22,14 +22,19 @@ export async function getDatabaseConnection() {
 
   // DATABASE_URL 직접 연결만 사용
   const databaseUrl = process.env.DATABASE_URL;
+  
+  // 빌드 시점에서는 기본값 사용
+  const fallbackUrl = 'postgresql://postgres.djtohfpztbsbxpyephml:BpklBPjFD7zNibEF@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require';
+  const finalDatabaseUrl = databaseUrl || fallbackUrl;
+  
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL 환경 변수가 설정되지 않았습니다.');
+    console.warn('⚠️ DATABASE_URL 환경 변수가 설정되지 않았습니다. 기본값을 사용합니다.');
   }
 
   try {
     console.log('🔄 DATABASE_URL 직접 연결 시도...');
     
-    const sql = postgres(databaseUrl, {
+    const sql = postgres(finalDatabaseUrl, {
       max: 5,
       idle_timeout: 20,
       connect_timeout: CONNECTION_TIMEOUT,
