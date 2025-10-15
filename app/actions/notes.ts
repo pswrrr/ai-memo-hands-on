@@ -10,21 +10,21 @@ import { taggerService } from '@/lib/ai/tagger';
 
 export type SortOption = 'newest' | 'oldest' | 'title_asc' | 'title_desc';
 
-// 노트 목록 조회 서버 액션
+// ?�트 목록 조회 ?�버 ?�션
 export async function getNotes(page: number = 1, limit: number = 10, sortBy: SortOption = 'newest') {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // Supabase 클라이언트를 통한 노트 목록 조회
+    // Supabase ?�라?�언?��? ?�한 ?�트 목록 조회
     const result = await notesDb.getByUser(user.id, page, limit, sortBy);
 
     return {
@@ -41,30 +41,30 @@ export async function getNotes(page: number = 1, limit: number = 10, sortBy: Sor
       },
     };
   } catch (error) {
-    console.error('노트 목록 조회 오류:', error);
+
     
     return {
       success: false,
-      error: '노트 목록을 불러오는데 실패했습니다',
+      error: '?�트 목록??불러?�는???�패?�습?�다',
     };
   }
 }
 
-// 노트 상세 조회 서버 액션
+// ?�트 ?�세 조회 ?�버 ?�션
 export async function getNoteById(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // Supabase 클라이언트를 통한 노트 조회
+    // Supabase ?�라?�언?��? ?�한 ?�트 조회
     const note = await notesDb.getById(noteId, user.id);
 
     return {
@@ -72,30 +72,30 @@ export async function getNoteById(noteId: string) {
       data: note,
     };
   } catch (error) {
-    console.error('노트 상세 조회 오류:', error);
+
     
     return {
       success: false,
-      error: '노트를 불러오는데 실패했습니다',
+      error: '?�트�?불러?�는???�패?�습?�다',
     };
   }
 }
 
-// 노트 수정 서버 액션
+// ?�트 ?�정 ?�버 ?�션
 export async function updateNote(noteId: string, title: string, content: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // Supabase 클라이언트를 통한 노트 수정
+    // Supabase ?�라?�언?��? ?�한 ?�트 ?�정
     const updatedNote = await notesDb.update(noteId, user.id, title, content);
 
     return {
@@ -103,54 +103,51 @@ export async function updateNote(noteId: string, title: string, content: string)
       data: updatedNote,
     };
   } catch (error) {
-    console.error('노트 수정 오류:', error);
+
     
     return {
       success: false,
-      error: '노트 수정에 실패했습니다',
+      error: '?�트 ?�정???�패?�습?�다',
     };
   }
 }
 
-// 노트 생성 서버 액션
+// ?�트 ?�성 ?�버 ?�션
 export async function createNote(formData: FormData) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 폼 데이터 파싱
+    // ???�이???�싱
     const rawData = {
       title: formData.get('title') as string,
       content: formData.get('content') as string || '',
     };
 
-    // 유효성 검증
-    const validatedData = createNoteSchema.parse(rawData);
+    // ?�효??검�?    const validatedData = createNoteSchema.parse(rawData);
 
-    // Supabase 클라이언트를 통한 노트 저장
-    const newNote = await notesDb.create(
+    // Supabase ?�라?�언?��? ?�한 ?�트 ?�??    const newNote = await notesDb.create(
       user.id,
       validatedData.title,
       validatedData.content
     );
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
 
     return {
       success: true,
       noteId: newNote.id,
     };
   } catch (error) {
-    console.error('노트 생성 오류:', error);
+
     
     if (error instanceof Error) {
       return {
@@ -167,121 +164,118 @@ export async function createNote(formData: FormData) {
 }
 
 
-// 노트 소프트 삭제 서버 액션
+// ?�트 ?�프????�� ?�버 ?�션
 export async function deleteNote(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // Supabase 클라이언트를 통한 노트 소프트 삭제
+    // Supabase ?�라?�언?��? ?�한 ?�트 ?�프????��
     await notesDb.softDelete(noteId, user.id);
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error('노트 삭제 오류:', error);
+
     
     return {
       success: false,
-      error: '노트 삭제에 실패했습니다',
+      error: '?�트 ??��???�패?�습?�다',
     };
   }
 }
 
-// 노트 복구 서버 액션
+// ?�트 복구 ?�버 ?�션
 export async function restoreNote(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // Supabase 클라이언트를 통한 노트 복구
+    // Supabase ?�라?�언?��? ?�한 ?�트 복구
     await notesDb.restore(noteId, user.id);
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
     revalidatePath('/dashboard/trash');
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error('노트 복구 오류:', error);
+
     
     return {
       success: false,
-      error: '노트 복구에 실패했습니다',
+      error: '?�트 복구???�패?�습?�다',
     };
   }
 }
 
-// 노트 영구 삭제 서버 액션
+// ?�트 ?�구 ??�� ?�버 ?�션
 export async function permanentDeleteNote(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // Supabase 클라이언트를 통한 노트 영구 삭제
+    // Supabase ?�라?�언?��? ?�한 ?�트 ?�구 ??��
     await notesDb.permanentDelete(noteId, user.id);
 
-    // 캐시 무효화
-    revalidatePath('/dashboard/trash');
+    // 캐시 무효??    revalidatePath('/dashboard/trash');
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error('노트 영구 삭제 오류:', error);
+
     
     return {
       success: false,
-      error: '노트 영구 삭제에 실패했습니다',
+      error: '?�트 ?�구 ??��???�패?�습?�다',
     };
   }
 }
 
-// 휴지통 노트 목록 조회 서버 액션
+// ?��????�트 목록 조회 ?�버 ?�션
 export async function getTrashNotes(page: number = 1, limit: number = 10) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // Supabase 클라이언트를 통한 휴지통 노트 목록 조회
+    // Supabase ?�라?�언?��? ?�한 ?��????�트 목록 조회
     const result = await notesDb.getTrashByUser(user.id, page, limit);
 
     return {
@@ -298,85 +292,79 @@ export async function getTrashNotes(page: number = 1, limit: number = 10) {
       },
     };
   } catch (error) {
-    console.error('휴지통 노트 목록 조회 오류:', error);
+
     
     return {
       success: false,
-      error: '휴지통 노트 목록을 불러오는데 실패했습니다',
+      error: '?��????�트 목록??불러?�는???�패?�습?�다',
     };
   }
 }
 
-// AI 요약/태그 재생성 서버 액션
+// AI ?�약/?�그 ?�생???�버 ?�션
 export async function regenerateAI(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 환경변수 검증
-    try {
+    // ?�경변??검�?    try {
       validateEnvironment();
     } catch (error) {
       return {
         success: false,
-        error: 'AI 서비스 설정이 완료되지 않았습니다',
+        error: 'AI ?�비???�정???�료?��? ?�았?�니??,
       };
     }
 
-    // 노트 조회
+    // ?�트 조회
     const note = await notesDb.getById(noteId, user.id);
     if (!note) {
       return {
         success: false,
-        error: '노트를 찾을 수 없습니다',
+        error: '?�트�?찾을 ???�습?�다',
       };
     }
 
-    // Gemini API 클라이언트 초기화
-    const geminiClient = getGeminiClient();
+    // Gemini API ?�라?�언??초기??    const geminiClient = getGeminiClient();
 
-    // API 연결 테스트
-    const isConnected = await geminiClient.testConnection();
+    // API ?�결 ?�스??    const isConnected = await geminiClient.testConnection();
     if (!isConnected) {
       return {
         success: false,
-        error: 'AI 서비스에 연결할 수 없습니다',
+        error: 'AI ?�비?�에 ?�결?????�습?�다',
       };
     }
 
-    // 요약 생성
+    // ?�약 ?�성
     const summaryResult = await geminiClient.generateContent({
-      content: `다음 노트를 3-6개의 불릿 포인트로 요약해주세요:\n\n제목: ${note.title}\n내용: ${note.content}`
+      content: `?�음 ?�트�?3-6개의 불릿 ?�인?�로 ?�약?�주?�요:\n\n?�목: ${note.title}\n?�용: ${note.content}`
     });
 
-    // 태그 생성
+    // ?�그 ?�성
     const tagsResult = await geminiClient.generateContent({
-      content: `다음 노트의 내용을 바탕으로 최대 6개의 관련 태그를 생성해주세요. 태그는 쉼표로 구분해주세요:\n\n제목: ${note.title}\n내용: ${note.content}`
+      content: `?�음 ?�트???�용??바탕?�로 최�? 6개의 관???�그�??�성?�주?�요. ?�그???�표�?구분?�주?�요:\n\n?�목: ${note.title}\n?�용: ${note.content}`
     });
 
-    // 요약 저장
-    if (summaryResult.text) {
+    // ?�약 ?�??    if (summaryResult.text) {
       await notesDb.createSummary(noteId, 'gemini', summaryResult.text);
     }
 
-    // 태그 저장
-    if (tagsResult.text) {
+    // ?�그 ?�??    if (tagsResult.text) {
       const tags = tagsResult.text.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-      for (const tag of tags.slice(0, 6)) { // 최대 6개 태그
+      for (const tag of tags.slice(0, 6)) { // 최�? 6�??�그
         await notesDb.createTag(noteId, tag);
       }
     }
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
     revalidatePath(`/dashboard/notes/${noteId}`);
 
     return {
@@ -387,64 +375,62 @@ export async function regenerateAI(noteId: string) {
       }
     };
   } catch (error) {
-    console.error('AI 재생성 오류:', error);
+
     
     return {
       success: false,
-      error: 'AI 요약/태그 생성에 실패했습니다',
+      error: 'AI ?�약/?�그 ?�성???�패?�습?�다',
     };
   }
 }
 
-// AI 요약 생성 서버 액션
+// AI ?�약 ?�성 ?�버 ?�션
 export async function generateSummary(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 환경변수 검증
-    try {
+    // ?�경변??검�?    try {
       validateEnvironment();
     } catch (error) {
       return {
         success: false,
-        error: 'AI 서비스 설정이 완료되지 않았습니다',
+        error: 'AI ?�비???�정???�료?��? ?�았?�니??,
       };
     }
 
-    // 노트 조회
+    // ?�트 조회
     const note = await notesDb.getById(noteId, user.id);
     if (!note) {
       return {
         success: false,
-        error: '노트를 찾을 수 없습니다',
+        error: '?�트�?찾을 ???�습?�다',
       };
     }
 
-    // 노트 내용이 없으면 에러
+    // ?�트 ?�용???�으�??�러
     if (!note.content || note.content.trim().length === 0) {
       return {
         success: false,
-        error: '요약할 내용이 없습니다',
+        error: '?�약???�용???�습?�다',
       };
     }
 
-    // 요약 생성
+    // ?�약 ?�성
     const summaryResult = await summarizerService.generateSummary(note.content, note.title);
 
-    // 요약 저장 (기존 요약이 있으면 업데이트)
+    // ?�약 ?�??(기존 ?�약???�으�??�데?�트)
     await notesDb.upsertSummary(noteId, 'gemini-2.0-flash-exp', summaryResult.summary);
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
     revalidatePath(`/dashboard/notes/${noteId}`);
 
     return {
@@ -457,50 +443,50 @@ export async function generateSummary(noteId: string) {
       }
     };
   } catch (error) {
-    console.error('요약 생성 오류:', error);
+
     
     return {
       success: false,
-      error: '요약 생성에 실패했습니다',
+      error: '?�약 ?�성???�패?�습?�다',
     };
   }
 }
 
-// 요약 초안 생성 서버 액션 (미리보기용, 저장하지 않음)
+// ?�약 초안 ?�성 ?�버 ?�션 (미리보기?? ?�?�하지 ?�음)
 export async function generateSummaryDraft(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 환경 변수 확인
+    // ?�경 변???�인
     validateEnvironment();
 
-    // 노트 조회
+    // ?�트 조회
     const note = await notesDb.getById(noteId, user.id);
     if (!note) {
       return {
         success: false,
-        error: '노트를 찾을 수 없습니다',
+        error: '?�트�?찾을 ???�습?�다',
       };
     }
 
-    // 노트 내용이 없으면 에러
+    // ?�트 ?�용???�으�??�러
     if (!note.content || note.content.trim().length === 0) {
       return {
         success: false,
-        error: '요약할 내용이 없습니다',
+        error: '?�약???�용???�습?�다',
       };
     }
 
-    // 요약 초안 생성 (다양성을 위해 temperature 높임)
+    // ?�약 초안 ?�성 (?�양?�을 ?�해 temperature ?�임)
     const summaryResult = await summarizerService.generateSummary(note.content, note.title, { temperature: 0.9 });
 
     return {
@@ -513,34 +499,32 @@ export async function generateSummaryDraft(noteId: string) {
       }
     };
   } catch (error) {
-    console.error('요약 초안 생성 오류:', error);
+
     
     return {
       success: false,
-      error: '요약 초안 생성에 실패했습니다',
+      error: '?�약 초안 ?�성???�패?�습?�다',
     };
   }
 }
 
-// 선택한 요약 적용 서버 액션
+// ?�택???�약 ?�용 ?�버 ?�션
 export async function applySummary(noteId: string, summaryContent: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 요약 저장
-    await notesDb.upsertSummary(noteId, 'gemini-2.0-flash-exp', summaryContent);
+    // ?�약 ?�??    await notesDb.upsertSummary(noteId, 'gemini-2.0-flash-exp', summaryContent);
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
     revalidatePath(`/dashboard/notes/${noteId}`);
 
     return {
@@ -548,49 +532,47 @@ export async function applySummary(noteId: string, summaryContent: string) {
       data: { summary: summaryContent }
     };
   } catch (error) {
-    console.error('요약 적용 오류:', error);
+
     
     return {
       success: false,
-      error: '요약 적용에 실패했습니다',
+      error: '?�약 ?�용???�패?�습?�다',
     };
   }
 }
 
-// 요약 수동 편집 서버 액션
+// ?�약 ?�동 ?�집 ?�버 ?�션
 export async function updateSummary(noteId: string, summaryContent: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 요약 내용 검증
-    if (!summaryContent || summaryContent.trim().length === 0) {
+    // ?�약 ?�용 검�?    if (!summaryContent || summaryContent.trim().length === 0) {
       return {
         success: false,
-        error: '요약 내용을 입력해주세요',
+        error: '?�약 ?�용???�력?�주?�요',
       };
     }
 
     if (summaryContent.length > 1000) {
       return {
         success: false,
-        error: '요약은 1000자를 초과할 수 없습니다',
+        error: '?�약?� 1000?��? 초과?????�습?�다',
       };
     }
 
-    // 요약 업데이트
+    // ?�약 ?�데?�트
     await notesDb.upsertSummary(noteId, 'manual-edit', summaryContent.trim());
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
     revalidatePath(`/dashboard/notes/${noteId}`);
 
     return {
@@ -598,34 +580,33 @@ export async function updateSummary(noteId: string, summaryContent: string) {
       data: { summary: summaryContent.trim() }
     };
   } catch (error) {
-    console.error('요약 업데이트 오류:', error);
+
     
     return {
       success: false,
-      error: '요약 업데이트에 실패했습니다',
+      error: '?�약 ?�데?�트???�패?�습?�다',
     };
   }
 }
 
-// 태그 수동 편집 서버 액션
+// ?�그 ?�동 ?�집 ?�버 ?�션
 export async function updateTags(noteId: string, tags: string[]) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 태그 검증
-    if (tags.length > 6) {
+    // ?�그 검�?    if (tags.length > 6) {
       return {
         success: false,
-        error: '태그는 최대 6개까지 가능합니다',
+        error: '?�그??최�? 6개까지 가?�합?�다',
       };
     }
 
@@ -633,19 +614,18 @@ export async function updateTags(noteId: string, tags: string[]) {
       if (tag.length > 50) {
         return {
           success: false,
-          error: '각 태그는 50자를 초과할 수 없습니다',
+          error: '�??�그??50?��? 초과?????�습?�다',
         };
       }
     }
 
-    // 중복 태그 제거
+    // 중복 ?�그 ?�거
     const uniqueTags = [...new Set(tags.map(tag => tag.trim()).filter(tag => tag.length > 0))];
 
-    // 태그 업데이트
+    // ?�그 ?�데?�트
     await notesDb.replaceTags(noteId, uniqueTags);
 
-    // 캐시 무효화
-    revalidatePath('/dashboard');
+    // 캐시 무효??    revalidatePath('/dashboard');
     revalidatePath(`/dashboard/notes/${noteId}`);
 
     return {
@@ -653,39 +633,39 @@ export async function updateTags(noteId: string, tags: string[]) {
       data: { tags: uniqueTags }
     };
   } catch (error) {
-    console.error('태그 업데이트 오류:', error);
+
     
     return {
       success: false,
-      error: '태그 업데이트에 실패했습니다',
+      error: '?�그 ?�데?�트???�패?�습?�다',
     };
   }
 }
 
-// 요약 조회 서버 액션
+// ?�약 조회 ?�버 ?�션
 export async function getSummary(noteId: string) {
   try {
-    // 사용자 인증 확인
+    // ?�용???�증 ?�인
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       return {
         success: false,
-        error: '로그인이 필요합니다',
+        error: '로그?�이 ?�요?�니??,
       };
     }
 
-    // 노트 조회 (권한 확인)
+    // ?�트 조회 (권한 ?�인)
     const note = await notesDb.getById(noteId, user.id);
     if (!note) {
       return {
         success: false,
-        error: '노트를 찾을 수 없습니다',
+        error: '?�트�?찾을 ???�습?�다',
       };
     }
 
-    // 요약 조회
+    // ?�약 조회
     const summary = await notesDb.getSummaryByNoteId(noteId);
 
     return {
@@ -693,39 +673,39 @@ export async function getSummary(noteId: string) {
       data: summary
     };
   } catch (error) {
-    console.error('요약 조회 오류:', error);
+
     
     return {
       success: false,
-      error: '요약을 불러오는데 실패했습니다',
+      error: '?�약??불러?�는???�패?�습?�다',
     };
   }
 }
 
-// AI 태그 생성 서버 액션
+// AI ?�그 ?�성 ?�버 ?�션
 export async function generateTags(noteId: string) {
   try {
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: '로그인이 필요합니다' };
+      return { success: false, error: '로그?�이 ?�요?�니?? };
     }
 
     try {
       validateEnvironment();
     } catch (error) {
-      return { success: false, error: 'AI 서비스 설정이 완료되지 않았습니다' };
+      return { success: false, error: 'AI ?�비???�정???�료?��? ?�았?�니?? };
     }
 
     const note = await notesDb.getById(noteId, user.id);
-    if (!note) return { success: false, error: '노트를 찾을 수 없습니다' };
+    if (!note) return { success: false, error: '?�트�?찾을 ???�습?�다' };
     if (!note.content || note.content.trim().length === 0) {
-      return { success: false, error: '태그를 생성할 내용이 없습니다' };
+      return { success: false, error: '?�그�??�성???�용???�습?�다' };
     }
 
     const result = await taggerService.generateTags(note.content, note.title);
 
-    // 태그 저장: 기존 태그 교체
+    // ?�그 ?�?? 기존 ?�그 교체
     await notesDb.replaceTags(noteId, result.tags);
 
     revalidatePath('/dashboard');
@@ -733,29 +713,29 @@ export async function generateTags(noteId: string) {
 
     return { success: true, data: { tags: result.tags, processingTime: result.processingTime } };
   } catch (error) {
-    console.error('태그 생성 오류:', error);
-    return { success: false, error: '태그 생성에 실패했습니다' };
+
+    return { success: false, error: '?�그 ?�성???�패?�습?�다' };
   }
 }
 
-// 태그 조회 서버 액션
+// ?�그 조회 ?�버 ?�션
 export async function getTags(noteId: string) {
   try {
     const supabase = await createServerSupabase();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: '로그인이 필요합니다' };
+      return { success: false, error: '로그?�이 ?�요?�니?? };
     }
 
-    // 권한 확인을 위해 노트 존재 확인
+    // 권한 ?�인???�해 ?�트 존재 ?�인
     const note = await notesDb.getById(noteId, user.id);
-    if (!note) return { success: false, error: '노트를 찾을 수 없습니다' };
+    if (!note) return { success: false, error: '?�트�?찾을 ???�습?�다' };
 
     const rows = await notesDb.getTagsByNoteId(noteId);
     const tags = rows.map(r => r.tag).slice(0, 6);
     return { success: true, data: { tags } };
   } catch (error) {
-    console.error('태그 조회 오류:', error);
-    return { success: false, error: '태그를 불러오는데 실패했습니다' };
+
+    return { success: false, error: '?�그�?불러?�는???�패?�습?�다' };
   }
 }

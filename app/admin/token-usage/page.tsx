@@ -1,5 +1,5 @@
 /**
- * 토큰 사용량 관리자 대시보드
+ * ?�큰 ?�용??관리자 ?�?�보??
  */
 
 'use client';
@@ -62,17 +62,17 @@ export default function TokenUsageDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
-  // 데이터 로드
+  // ?�이??로드
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // TODO: 실제 API 호출로 데이터 로드
+      // TODO: ?�제 API ?�출�??�이??로드
       // const response = await fetch(`/api/analytics/token-usage?period=${timeRange}`);
       // const data = await response.json();
 
-      // 임시 데이터 (실제 구현 시 제거)
+      // ?�시 ?�이??(?�제 구현 ???�거)
       const mockStats: UsageStats = {
         totalTokens: 125000,
         totalCost: 0.45,
@@ -118,7 +118,7 @@ export default function TokenUsageDashboard() {
           thresholdValue: 50000,
           currentUsage: 45000,
           percentage: 90,
-          message: '일일 토큰 사용량이 90%에 도달했습니다.',
+          message: '?�일 ?�큰 ?�용?�이 90%???�달?�습?�다.',
           alertSentAt: new Date(Date.now() - 30 * 60 * 1000),
           status: 'sent'
         }
@@ -128,8 +128,8 @@ export default function TokenUsageDashboard() {
       setUserRankings(mockUserRankings);
       setRecentAlerts(mockAlerts);
     } catch (err) {
-      setError('데이터를 불러오는 중 오류가 발생했습니다.');
-      console.error('데이터 로드 실패:', err);
+      setError('?�이?��? 불러?�는 �??�류가 발생?�습?�다.');
+
     } finally {
       setLoading(false);
     }
@@ -139,23 +139,23 @@ export default function TokenUsageDashboard() {
     loadData();
   }, [timeRange]);
 
-  // 데이터 내보내기
+  // ?�이???�보?�기
   const handleExport = async () => {
     try {
-      // TODO: 실제 데이터 내보내기 구현
-      console.log('데이터 내보내기 시작...');
-      alert('데이터 내보내기 기능은 준비 중입니다.');
+      // TODO: ?�제 ?�이???�보?�기 구현
+
+      alert('?�이???�보?�기 기능?� 준�?중입?�다.');
     } catch (err) {
-      console.error('데이터 내보내기 실패:', err);
-      alert('데이터 내보내기에 실패했습니다.');
+
+      alert('?�이???�보?�기???�패?�습?�다.');
     }
   };
 
-  // 설정 열기
+  // ?�정 ?�기
   const handleOpenSettings = () => {
-    // TODO: 설정 모달 열기
-    console.log('설정 열기');
-    alert('설정 기능은 준비 중입니다.');
+    // TODO: ?�정 모달 ?�기
+    console.log('?�정 ?�기');
+    alert('?�정 기능?� 준�?중입?�다.');
   };
 
   if (loading) {
@@ -163,7 +163,7 @@ export default function TokenUsageDashboard() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>데이터를 불러오는 중...</p>
+          <p>?�이?��? 불러?�는 �?..</p>
         </div>
       </div>
     );
@@ -178,7 +178,7 @@ export default function TokenUsageDashboard() {
         </Alert>
         <Button onClick={loadData} className="mt-4">
           <RefreshCw className="mr-2 h-4 w-4" />
-          다시 시도
+          ?�시 ?�도
         </Button>
       </div>
     );
@@ -189,7 +189,7 @@ export default function TokenUsageDashboard() {
       <div className="container mx-auto p-6">
         <Alert>
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>데이터를 불러올 수 없습니다.</AlertDescription>
+          <AlertDescription>?�이?��? 불러?????�습?�다.</AlertDescription>
         </Alert>
       </div>
     );
@@ -200,29 +200,29 @@ export default function TokenUsageDashboard() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* 헤더 */}
+      {/* ?�더 */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">토큰 사용량 대시보드</h1>
-          <p className="text-gray-600">AI 서비스 사용량 및 비용 모니터링</p>
+          <h1 className="text-3xl font-bold">?�큰 ?�용???�?�보??/h1>
+          <p className="text-gray-600">AI ?�비???�용??�?비용 모니?�링</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExport} variant="outline">
             <Download className="mr-2 h-4 w-4" />
-            데이터 내보내기
+            ?�이???�보?�기
           </Button>
           <Button onClick={handleOpenSettings} variant="outline">
             <Settings className="mr-2 h-4 w-4" />
-            설정
+            ?�정
           </Button>
           <Button onClick={loadData}>
             <RefreshCw className="mr-2 h-4 w-4" />
-            새로고침
+            ?�로고침
           </Button>
         </div>
       </div>
 
-      {/* 시간 범위 선택 */}
+      {/* ?�간 범위 ?�택 */}
       <div className="flex gap-2">
         {(['daily', 'weekly', 'monthly'] as const).map((range) => (
           <Button
@@ -230,79 +230,79 @@ export default function TokenUsageDashboard() {
             variant={timeRange === range ? 'default' : 'outline'}
             onClick={() => setTimeRange(range)}
           >
-            {range === 'daily' ? '일간' : range === 'weekly' ? '주간' : '월간'}
+            {range === 'daily' ? '?�간' : range === 'weekly' ? '주간' : '?�간'}
           </Button>
         ))}
       </div>
 
-      {/* 주요 지표 카드 */}
+      {/* 주요 지??카드 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 토큰 사용량</CardTitle>
+            <CardTitle className="text-sm font-medium">�??�큰 ?�용??/CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalTokens.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              {timeRange === 'daily' ? '오늘' : timeRange === 'weekly' ? '이번 주' : '이번 달'}
+              {timeRange === 'daily' ? '?�늘' : timeRange === 'weekly' ? '?�번 �? : '?�번 ??}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 비용</CardTitle>
+            <CardTitle className="text-sm font-medium">�?비용</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${stats.totalCost.toFixed(4)}</div>
             <p className="text-xs text-muted-foreground">
-              예상 비용
+              ?�상 비용
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">요청 수</CardTitle>
+            <CardTitle className="text-sm font-medium">?�청 ??/CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.requestCount}</div>
             <p className="text-xs text-muted-foreground">
-              성공률: {successRate.toFixed(1)}%
+              ?�공�? {successRate.toFixed(1)}%
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">평균 처리 시간</CardTitle>
+            <CardTitle className="text-sm font-medium">?�균 처리 ?�간</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{(stats.avgProcessingTime / 1000).toFixed(1)}s</div>
             <p className="text-xs text-muted-foreground">
-              평균 응답 시간
+              ?�균 ?�답 ?�간
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* 에러율 및 성공률 */}
+      {/* ?�러??�??�공�?*/}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <TrendingUp className="mr-2 h-5 w-5 text-green-500" />
-              성공률
+              ?�공�?
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">{successRate.toFixed(1)}%</div>
             <p className="text-sm text-muted-foreground">
-              {stats.successCount} / {stats.requestCount} 요청
+              {stats.successCount} / {stats.requestCount} ?�청
             </p>
           </CardContent>
         </Card>
@@ -311,23 +311,23 @@ export default function TokenUsageDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center">
               <TrendingDown className="mr-2 h-5 w-5 text-red-500" />
-              에러율
+              ?�러??
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-600">{errorRate.toFixed(1)}%</div>
             <p className="text-sm text-muted-foreground">
-              {stats.errorCount} / {stats.requestCount} 요청
+              {stats.errorCount} / {stats.requestCount} ?�청
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* 사용자 랭킹 */}
+      {/* ?�용????�� */}
       <Card>
         <CardHeader>
-          <CardTitle>사용자별 토큰 사용량</CardTitle>
-          <CardDescription>상위 사용자들의 토큰 사용량 현황</CardDescription>
+          <CardTitle>?�용?�별 ?�큰 ?�용??/CardTitle>
+          <CardDescription>?�위 ?�용?�들???�큰 ?�용???�황</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -338,14 +338,14 @@ export default function TokenUsageDashboard() {
                     {index + 1}
                   </div>
                   <div>
-                    <p className="font-medium">사용자 {user.userId}</p>
+                    <p className="font-medium">?�용??{user.userId}</p>
                     <p className="text-sm text-muted-foreground">
-                      마지막 활동: {user.lastActivity.toLocaleString()}
+                      마�?�??�동: {user.lastActivity.toLocaleString()}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium">{user.totalTokens.toLocaleString()} 토큰</p>
+                  <p className="font-medium">{user.totalTokens.toLocaleString()} ?�큰</p>
                   <p className="text-sm text-muted-foreground">${user.totalCost.toFixed(4)}</p>
                 </div>
               </div>
@@ -354,15 +354,15 @@ export default function TokenUsageDashboard() {
         </CardContent>
       </Card>
 
-      {/* 최근 알림 */}
+      {/* 최근 ?�림 */}
       {recentAlerts.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <AlertTriangle className="mr-2 h-5 w-5 text-orange-500" />
-              최근 알림
+              최근 ?�림
             </CardTitle>
-            <CardDescription>사용량 임계값 관련 알림</CardDescription>
+            <CardDescription>?�용???�계�?관???�림</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -374,11 +374,11 @@ export default function TokenUsageDashboard() {
                       <div>
                         <p className="font-medium">{alert.message}</p>
                         <p className="text-sm text-muted-foreground">
-                          사용자: {alert.userId} | {alert.alertSentAt.toLocaleString()}
+                          ?�용?? {alert.userId} | {alert.alertSentAt.toLocaleString()}
                         </p>
                       </div>
                       <Badge variant={alert.status === 'sent' ? 'default' : 'secondary'}>
-                        {alert.status === 'sent' ? '전송됨' : alert.status === 'read' ? '읽음' : '무시됨'}
+                        {alert.status === 'sent' ? '?�송?? : alert.status === 'read' ? '?�음' : '무시??}
                       </Badge>
                     </div>
                   </AlertDescription>

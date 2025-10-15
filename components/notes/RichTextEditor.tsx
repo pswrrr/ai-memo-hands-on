@@ -1,6 +1,6 @@
 // components/notes/RichTextEditor.tsx
-// 리치 텍스트 에디터 컴포넌트
-// 툴바와 에디터 영역을 포함한 완전한 리치 텍스트 편집 기능
+// 리치 ?�스???�디??컴포?�트
+// ?�바?� ?�디???�역???�함???�전??리치 ?�스???�집 기능
 
 'use client';
 
@@ -21,7 +21,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({
   value,
   onChange,
-  placeholder = "텍스트를 입력하세요...",
+  placeholder = "?�스?��? ?�력?�세??..",
   maxLength = 10000,
   className,
   rows = 15
@@ -30,17 +30,17 @@ export default function RichTextEditor({
   const [charCount, setCharCount] = useState(value.length);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // 글자 수 업데이트
+  // 글?????�데?�트
   useEffect(() => {
     setCharCount(value.length);
   }, [value]);
 
-  // 다크 모드 토글
+  // ?�크 모드 ?��?
   const handleThemeToggle = () => {
     setIsDarkMode(!isDarkMode);
   };
 
-  // 포맷 변경 핸들러
+  // ?�맷 변�??�들??
   const handleFormatChange = useCallback((format: string, formatValue?: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -58,7 +58,7 @@ export default function RichTextEditor({
           newText = value.substring(0, start) + `**${selectedText}**` + value.substring(end);
           newCursorPos = start + 2 + selectedText.length + 2;
         } else {
-          newText = value.substring(0, start) + '**텍스트**' + value.substring(end);
+          newText = value.substring(0, start) + '**?�스??*' + value.substring(end);
           newCursorPos = start + 2;
         }
         break;
@@ -68,7 +68,7 @@ export default function RichTextEditor({
           newText = value.substring(0, start) + `*${selectedText}*` + value.substring(end);
           newCursorPos = start + 1 + selectedText.length + 1;
         } else {
-          newText = value.substring(0, start) + '*텍스트*' + value.substring(end);
+          newText = value.substring(0, start) + '*?�스??' + value.substring(end);
           newCursorPos = start + 1;
         }
         break;
@@ -78,7 +78,7 @@ export default function RichTextEditor({
           newText = value.substring(0, start) + `<u>${selectedText}</u>` + value.substring(end);
           newCursorPos = start + 3 + selectedText.length + 4;
         } else {
-          newText = value.substring(0, start) + '<u>텍스트</u>' + value.substring(end);
+          newText = value.substring(0, start) + '<u>?�스??/u>' + value.substring(end);
           newCursorPos = start + 3;
         }
         break;
@@ -89,7 +89,7 @@ export default function RichTextEditor({
             newText = value.substring(0, start) + `# ${selectedText}` + value.substring(end);
             newCursorPos = start + 2 + selectedText.length;
           } else {
-            newText = value.substring(0, start) + '# 제목' + value.substring(end);
+            newText = value.substring(0, start) + '# ?�목' + value.substring(end);
             newCursorPos = start + 2;
           }
         } else if (formatValue === 'h2') {
@@ -97,7 +97,7 @@ export default function RichTextEditor({
             newText = value.substring(0, start) + `## ${selectedText}` + value.substring(end);
             newCursorPos = start + 3 + selectedText.length;
           } else {
-            newText = value.substring(0, start) + '## 제목' + value.substring(end);
+            newText = value.substring(0, start) + '## ?�목' + value.substring(end);
             newCursorPos = start + 3;
           }
         } else if (formatValue === 'h3') {
@@ -105,7 +105,7 @@ export default function RichTextEditor({
             newText = value.substring(0, start) + `### ${selectedText}` + value.substring(end);
             newCursorPos = start + 4 + selectedText.length;
           } else {
-            newText = value.substring(0, start) + '### 제목' + value.substring(end);
+            newText = value.substring(0, start) + '### ?�목' + value.substring(end);
             newCursorPos = start + 4;
           }
         }
@@ -113,13 +113,13 @@ export default function RichTextEditor({
         
       case 'align':
         if (formatValue === 'left') {
-          newText = value.substring(0, start) + `<div style="text-align: left;">${selectedText || '텍스트'}</div>` + value.substring(end);
+          newText = value.substring(0, start) + `<div style="text-align: left;">${selectedText || '?�스??}</div>` + value.substring(end);
           newCursorPos = start + 30 + (selectedText?.length || 2);
         } else if (formatValue === 'center') {
-          newText = value.substring(0, start) + `<div style="text-align: center;">${selectedText || '텍스트'}</div>` + value.substring(end);
+          newText = value.substring(0, start) + `<div style="text-align: center;">${selectedText || '?�스??}</div>` + value.substring(end);
           newCursorPos = start + 32 + (selectedText?.length || 2);
         } else if (formatValue === 'right') {
-          newText = value.substring(0, start) + `<div style="text-align: right;">${selectedText || '텍스트'}</div>` + value.substring(end);
+          newText = value.substring(0, start) + `<div style="text-align: right;">${selectedText || '?�스??}</div>` + value.substring(end);
           newCursorPos = start + 31 + (selectedText?.length || 2);
         }
         break;
@@ -128,7 +128,7 @@ export default function RichTextEditor({
     if (newText && newText !== value) {
       onChange(newText);
       
-      // 커서 위치 설정
+      // 커서 ?�치 ?�정
       setTimeout(() => {
         if (textarea) {
           textarea.focus();
@@ -138,7 +138,7 @@ export default function RichTextEditor({
     }
   }, [value, onChange]);
 
-  // 키보드 단축키 처리
+  // ?�보???�축??처리
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
@@ -163,15 +163,15 @@ export default function RichTextEditor({
       "border rounded-lg overflow-hidden",
       isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200",
       className
-    )} data-testid="rich-text-editor">
-      {/* 툴바 */}
+    )}>
+      {/* ?�바 */}
       <RichTextToolbar
         onFormatChange={handleFormatChange}
         onThemeToggle={handleThemeToggle}
         isDarkMode={isDarkMode}
       />
       
-      {/* 에디터 영역 */}
+      {/* ?�디???�역 */}
       <div className="relative">
         <Textarea
           ref={textareaRef}
@@ -189,7 +189,7 @@ export default function RichTextEditor({
           )}
         />
         
-        {/* 글자 수 표시 */}
+        {/* 글?????�시 */}
         <div className={cn(
           "absolute bottom-2 right-2 text-xs px-2 py-1 rounded",
           isDarkMode 
