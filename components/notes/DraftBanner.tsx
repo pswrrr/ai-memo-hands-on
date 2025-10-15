@@ -55,7 +55,7 @@ export default function DraftBanner({
           <p className="text-sm text-yellow-800 mb-3">
             {getRelativeTime(draftData.savedAt)} 저장됨
             {draftData.title && (
-              <> · <span className="font-medium">"{draftData.title}"</span></>
+              <> · <span className="font-medium">&ldquo;{draftData.title}&rdquo;</span></>
             )}
           </p>
           <div className="flex flex-wrap gap-2">

@@ -82,12 +82,12 @@ export default async function DashboardPage() {
                 <h3 className="text-lg font-semibold text-gray-900">텍스트 메모</h3>
               </div>
               <p className="text-gray-600 mb-4">키보드로 메모를 작성하고 AI가 자동으로 요약과 태그를 생성합니다.</p>
-              <a 
+              <Link 
                 href="/dashboard/notes/new"
                 className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors inline-block text-center"
               >
                 텍스트 메모 작성
-              </a>
+              </Link>
             </div>
 
             {/* AI 요약 카드 */}

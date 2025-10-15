@@ -219,7 +219,7 @@ export const notesDb = {
   // 태그 일괄 교체 (기존 삭제 후 새로 삽입)
   async replaceTags(noteId: string, tags: string[]) {
     // 기존 태그 삭제
-    let { error: delError } = await supabase
+    const { error: delError } = await supabase
       .from('note_tags')
       .delete()
       .eq('note_id', noteId)

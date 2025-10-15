@@ -281,7 +281,7 @@ export default function TagsSection({ noteId }: TagsSectionProps) {
             </div>
           ) : (
             !isLoading && !error && (
-              <div className="text-gray-500 italic">아직 생성된 태그가 없습니다. '태그 생성' 버튼을 눌러보세요.</div>
+              <div className="text-gray-500 italic">아직 생성된 태그가 없습니다. &lsquo;태그 생성&rsquo; 버튼을 눌러보세요.</div>
             )
           )
         )}
