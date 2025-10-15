@@ -7,7 +7,7 @@ import { createServerSupabase } from '@/lib/supabase-server';
 import WelcomeMessage from '@/components/dashboard/WelcomeMessage';
 import LogoutButton from '@/components/auth/LogoutButton';
 import SessionGuard from '@/components/auth/SessionGuard';
-import NoteList from '@/components/notes/NoteList';
+import OptimizedNoteList from '@/components/notes/OptimizedNoteList';
 import SortSelect from '@/components/notes/SortSelect';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
               <SortSelect />
             </div>
             
-            <NoteList />
+            <OptimizedNoteList />
           </div>
         </div>
       </div>

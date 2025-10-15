@@ -1,8 +1,10 @@
 // 데이터베이스 연결 관리 유틸리티
 // DATABASE_URL 직접 연결만 사용하는 단순화된 연결 관리
+// 성능 최적화를 위한 캐싱 및 연결 풀링 개선
 
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import performanceMonitor from './performance-monitor';
 
 // 연결 상태 캐시
 let connectionStatus: 'unknown' | 'direct' = 'unknown';
@@ -33,12 +35,20 @@ export async function getDatabaseConnection() {
 
   try {
     console.log('🔄 DATABASE_URL 직접 연결 시도...');
+    const connectionStart = Date.now();
     
     const sql = postgres(finalDatabaseUrl, {
-      max: 5,
-      idle_timeout: 20,
+      max: 15, // 연결 풀 크기 증가 (5 → 15)
+      idle_timeout: 10, // 유휴 시간 단축 (20 → 10초)
       connect_timeout: CONNECTION_TIMEOUT,
       ssl: 'require',
+      // 성능 최적화 옵션 추가
+      prepare: false, // prepared statements 비활성화로 초기 연결 속도 향상
+      transform: {
+        undefined: null, // undefined를 null로 변환하여 오류 방지
+      },
+      // 연결 재사용 최적화
+      onnotice: () => {}, // 불필요한 notice 로그 제거
     });
     
     const db = drizzle(sql);
@@ -51,10 +61,13 @@ export async function getDatabaseConnection() {
     
     await Promise.race([testPromise, timeoutPromise]);
     
+    const connectionTime = Date.now() - connectionStart;
+    performanceMonitor.recordConnectionTime(connectionTime);
+    
     connectionStatus = 'direct';
     cachedConnection = { type: 'direct', connection: db, sql };
     lastHealthCheck = new Date();
-    console.log('✅ DATABASE_URL 직접 연결 성공');
+    console.log(`✅ DATABASE_URL 직접 연결 성공 (${connectionTime}ms)`);
     return cachedConnection;
   } catch (error) {
     console.error('❌ DATABASE_URL 직접 연결 실패:', error instanceof Error ? error.message : '알 수 없는 오류');
