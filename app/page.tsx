@@ -8,17 +8,9 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function Home() {
-  console.log('🏠 [app/page.tsx] 메인 페이지 렌더링 시작');
-  
   // 서버 사이드에서 세션 확인
   const supabase = await createServerSupabase();
-  const { data: { session }, error } = await supabase.auth.getSession();
-  
-  console.log('세션 확인 결과:');
-  console.log('- session:', session);
-  console.log('- error:', error);
-  console.log('- user:', session?.user);
-  console.log('- user.email:', session?.user?.email);
+  const { data: { session } } = await supabase.auth.getSession();
   
   const user = session?.user;
 

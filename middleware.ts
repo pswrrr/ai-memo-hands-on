@@ -27,8 +27,6 @@ const publicRoutes = [
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  console.log('🛡️ [middleware.ts] 라우트 보호 확인:', pathname);
 
   // 정적 파일은 통과
   if (pathname.startsWith('/_next/') || 
@@ -39,7 +37,6 @@ export async function middleware(request: NextRequest) {
 
   // 공개 라우트는 통과
   if (publicRoutes.includes(pathname)) {
-    console.log('✅ [middleware.ts] 공개 라우트, 통과');
     return NextResponse.next();
   }
 
@@ -49,42 +46,29 @@ export async function middleware(request: NextRequest) {
   );
 
   if (!isProtectedRoute) {
-    console.log('✅ [middleware.ts] 보호되지 않은 라우트, 통과');
     return NextResponse.next();
   }
 
   try {
-    console.log('🔍 [middleware.ts] 보호된 라우트 접근, 인증 확인 시작');
-    
     // Supabase 서버 클라이언트로 세션 확인
     const supabase = await createServerSupabase();
     const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error) {
-      console.error('❌ [middleware.ts] 인증 확인 실패:', error);
+    if (error || !user) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
     }
-
-    if (!user) {
-      console.log('🔓 [middleware.ts] 인증되지 않은 사용자, 로그인 페이지로 리다이렉트');
-      return NextResponse.redirect(new URL('/auth/login', request.url));
-    }
-
-    console.log('✅ [middleware.ts] 인증된 사용자, 라우트 접근 허용');
     
     // 인증된 사용자의 경우 온보딩 완료 여부 확인
     if (pathname === '/dashboard') {
       const onboardingCompleted = user.user_metadata?.onboarding_completed;
       
       if (!onboardingCompleted) {
-        console.log('📚 [middleware.ts] 온보딩 미완료, 온보딩 페이지로 리다이렉트');
         return NextResponse.redirect(new URL('/onboarding', request.url));
       }
     }
 
     return NextResponse.next();
   } catch (error) {
-    console.error('❌ [middleware.ts] 미들웨어 처리 중 오류:', error);
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 }
