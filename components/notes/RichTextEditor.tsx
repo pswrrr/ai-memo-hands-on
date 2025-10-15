@@ -163,7 +163,7 @@ export default function RichTextEditor({
       "border rounded-lg overflow-hidden",
       isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200",
       className
-    )}>
+    )} data-testid="rich-text-editor">
       {/* 툴바 */}
       <RichTextToolbar
         onFormatChange={handleFormatChange}

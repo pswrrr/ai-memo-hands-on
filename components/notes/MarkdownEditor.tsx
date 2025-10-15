@@ -215,7 +215,7 @@ export default function MarkdownEditor({
       "border rounded-lg overflow-hidden",
       isDarkMode ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200",
       className
-    )}>
+    )} data-testid="markdown-editor">
       {/* 툴바 */}
       <div className={cn(
         "flex items-center gap-1 p-2 border-b bg-gray-50 dark:bg-gray-800"

@@ -39,7 +39,7 @@ export default function AdvancedToolbar({
     <div className={cn(
       "flex items-center gap-1 p-2 border-b bg-gray-50 dark:bg-gray-800",
       className
-    )}>
+    )} data-testid="advanced-tools">
       {/* 검색 및 바꾸기 */}
       <SearchReplace
         content={content}
