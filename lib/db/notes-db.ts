@@ -549,16 +549,47 @@ async function createSummary(
   model: string,
   content: string
 ): Promise<Summary> {
-  const [summary] = await db
-    .insert(summaries)
-    .values({
-      noteId,
-      model: model as any, // model enum type
+  try {
+    // 1. 직접 연결 시도
+    const connection = await getDatabaseConnection();
+    
+    if (connection.type === 'direct') {
+      console.log('📄 Drizzle ORM 직접 연결을 통한 요약 생성');
+      const [summary] = await connection.connection
+        .insert(summaries)
+        .values({
+          noteId,
+          model: model as any, // model enum type
+          content,
+        })
+        .returning();
+      
+      return summary;
+    }
+  } catch (error) {
+    console.log('⚠️ Drizzle ORM 직접 연결 실패, Supabase 클라이언트 사용:', error instanceof Error ? error.message : '알 수 없는 오류');
+  }
+
+  // 2. Supabase 클라이언트를 통한 대안 생성
+  console.log('📄 Supabase 클라이언트를 통한 요약 생성');
+  const supabase = await createServerSupabase();
+  
+  const { data, error } = await supabase
+    .from('summaries')
+    .insert({
+      note_id: noteId,
+      model: model as any,
       content,
     })
-    .returning();
-  
-  return summary;
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Supabase 요약 생성 오류:', error);
+    throw error;
+  }
+
+  return data;
 }
 
 // 태그 생성
@@ -566,29 +597,88 @@ async function createTag(
   noteId: string,
   tag: string
 ): Promise<NoteTag> {
-  const [noteTag] = await db
-    .insert(noteTags)
-    .values({
-      noteId,
+  try {
+    // 1. 직접 연결 시도
+    const connection = await getDatabaseConnection();
+    
+    if (connection.type === 'direct') {
+      console.log('🏷️ Drizzle ORM 직접 연결을 통한 태그 생성');
+      const [noteTag] = await connection.connection
+        .insert(noteTags)
+        .values({
+          noteId,
+          tag,
+        })
+        .returning();
+      
+      return noteTag;
+    }
+  } catch (error) {
+    console.log('⚠️ Drizzle ORM 직접 연결 실패, Supabase 클라이언트 사용:', error instanceof Error ? error.message : '알 수 없는 오류');
+  }
+
+  // 2. Supabase 클라이언트를 통한 대안 생성
+  console.log('🏷️ Supabase 클라이언트를 통한 태그 생성');
+  const supabase = await createServerSupabase();
+  
+  const { data, error } = await supabase
+    .from('note_tags')
+    .insert({
+      note_id: noteId,
       tag,
     })
-    .returning();
-  
-  return noteTag;
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Supabase 태그 생성 오류:', error);
+    throw error;
+  }
+
+  return data;
 }
 
 // 노트의 요약 조회
 async function getSummaryByNoteId(
   noteId: string
 ): Promise<Summary | undefined> {
-  const [summary] = await db
-    .select()
-    .from(summaries)
-    .where(eq(summaries.noteId, noteId))
-    .orderBy(desc(summaries.createdAt))
-    .limit(1);
+  try {
+    // 1. 직접 연결 시도
+    const connection = await getDatabaseConnection();
+    
+    if (connection.type === 'direct') {
+      console.log('📄 Drizzle ORM 직접 연결을 통한 요약 조회');
+      const [summary] = await connection.connection
+        .select()
+        .from(summaries)
+        .where(eq(summaries.noteId, noteId))
+        .orderBy(desc(summaries.createdAt))
+        .limit(1);
+      
+      return summary;
+    }
+  } catch (error) {
+    console.log('⚠️ Drizzle ORM 직접 연결 실패, Supabase 클라이언트 사용:', error instanceof Error ? error.message : '알 수 없는 오류');
+  }
+
+  // 2. Supabase 클라이언트를 통한 대안 조회
+  console.log('📄 Supabase 클라이언트를 통한 요약 조회');
+  const supabase = await createServerSupabase();
   
-  return summary;
+  const { data, error } = await supabase
+    .from('summaries')
+    .select('*')
+    .eq('note_id', noteId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    console.error('Supabase 요약 조회 오류:', error);
+    return undefined;
+  }
+
+  return data;
 }
 
 // 노트의 태그 조회
@@ -722,18 +812,49 @@ async function upsertSummary(
   const existingSummary = await getSummaryByNoteId(noteId);
   
   if (existingSummary) {
-    // 기존 요약 업데이트
-    const [updated] = await db
-      .update(summaries)
-      .set({
+    try {
+      // 1. 직접 연결 시도
+      const connection = await getDatabaseConnection();
+      
+      if (connection.type === 'direct') {
+        console.log('📄 Drizzle ORM 직접 연결을 통한 요약 업데이트');
+        const [updated] = await connection.connection
+          .update(summaries)
+          .set({
+            model: model as any,
+            content,
+            createdAt: new Date(),
+          })
+          .where(eq(summaries.noteId, noteId))
+          .returning();
+        
+        return updated;
+      }
+    } catch (error) {
+      console.log('⚠️ Drizzle ORM 직접 연결 실패, Supabase 클라이언트 사용:', error instanceof Error ? error.message : '알 수 없는 오류');
+    }
+
+    // 2. Supabase 클라이언트를 통한 대안 업데이트
+    console.log('📄 Supabase 클라이언트를 통한 요약 업데이트');
+    const supabase = await createServerSupabase();
+    
+    const { data, error } = await supabase
+      .from('summaries')
+      .update({
         model: model as any,
         content,
-        createdAt: new Date(),
+        created_at: new Date().toISOString(),
       })
-      .where(eq(summaries.noteId, noteId))
-      .returning();
-    
-    return updated;
+      .eq('note_id', noteId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase 요약 업데이트 오류:', error);
+      throw error;
+    }
+
+    return data;
   } else {
     // 새 요약 생성
     return await createSummary(noteId, model, content);
@@ -744,9 +865,35 @@ async function upsertSummary(
 async function deleteSummary(
   noteId: string
 ): Promise<void> {
-  await db
-    .delete(summaries)
-    .where(eq(summaries.noteId, noteId));
+  try {
+    // 1. 직접 연결 시도
+    const connection = await getDatabaseConnection();
+    
+    if (connection.type === 'direct') {
+      console.log('📄 Drizzle ORM 직접 연결을 통한 요약 삭제');
+      await connection.connection
+        .delete(summaries)
+        .where(eq(summaries.noteId, noteId));
+      
+      return;
+    }
+  } catch (error) {
+    console.log('⚠️ Drizzle ORM 직접 연결 실패, Supabase 클라이언트 사용:', error instanceof Error ? error.message : '알 수 없는 오류');
+  }
+
+  // 2. Supabase 클라이언트를 통한 대안 삭제
+  console.log('📄 Supabase 클라이언트를 통한 요약 삭제');
+  const supabase = await createServerSupabase();
+  
+  const { error } = await supabase
+    .from('summaries')
+    .delete()
+    .eq('note_id', noteId);
+
+  if (error) {
+    console.error('Supabase 요약 삭제 오류:', error);
+    throw error;
+  }
 }
 
 // notesDb 객체 export (supabase-db.ts와 동일한 인터페이스)
