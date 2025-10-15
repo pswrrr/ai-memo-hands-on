@@ -5,12 +5,16 @@ import * as schema from './schema';
 // Database connection configuration
 const connectionString = process.env.DATABASE_URL;
 
+// 빌드 시점에서는 기본값 사용
+const fallbackUrl = 'postgresql://postgres.djtohfpztbsbxpyephml:BpklBPjFD7zNibEF@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require';
+const finalConnectionString = connectionString || fallbackUrl;
+
 if (!connectionString) {
-  throw new Error('DATABASE_URL environment variable is not set');
+  console.warn('⚠️ DATABASE_URL 환경 변수가 설정되지 않았습니다. 기본값을 사용합니다.');
 }
 
 // Create postgres client with connection pooling
-const client = postgres(connectionString, {
+const client = postgres(finalConnectionString, {
   max: 10, // Maximum number of connections in the pool
   idle_timeout: 20, // Close idle connections after 20 seconds
   connect_timeout: 10, // Connection timeout in seconds
