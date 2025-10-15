@@ -438,7 +438,12 @@ export async function generateSummary(noteId: string) {
     }
 
     // 요약 생성
-    const summaryResult = await summarizerService.generateSummary(note.content, note.title);
+    const summaryResult = await summarizerService.generateSummary(
+      note.content, 
+      note.title,
+      undefined, // options
+      { userId: user.id, noteId } // context
+    );
 
     // 요약 저장 (기존 요약이 있으면 업데이트)
     await notesDb.upsertSummary(noteId, 'gemini-2.0-flash-exp', summaryResult.summary);
@@ -501,7 +506,12 @@ export async function generateSummaryDraft(noteId: string) {
     }
 
     // 요약 초안 생성 (다양성을 위해 temperature 높임)
-    const summaryResult = await summarizerService.generateSummary(note.content, note.title, { temperature: 0.9 });
+    const summaryResult = await summarizerService.generateSummary(
+      note.content, 
+      note.title, 
+      { temperature: 0.9 },
+      { userId: user.id, noteId } // context
+    );
 
     return {
       success: true,
@@ -723,7 +733,7 @@ export async function generateTags(noteId: string) {
       return { success: false, error: '태그를 생성할 내용이 없습니다' };
     }
 
-    const result = await taggerService.generateTags(note.content, note.title);
+    const result = await taggerService.generateTags(note.content, note.title, { userId: user.id, noteId });
 
     // 태그 저장: 기존 태그 교체
     await notesDb.replaceTags(noteId, result.tags);

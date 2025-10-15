@@ -36,19 +36,29 @@ export async function getDatabaseConnection() {
   try {
     console.log('🔄 DATABASE_URL 직접 연결 시도...');
     const connectionStart = Date.now();
-    
+
+    // Vercel 환경 감지
+    const isVercel = !!(process.env.VERCEL || process.env.VERCEL_ENV);
+    const isProduction = process.env.NODE_ENV === 'production';
+
     const sql = postgres(finalDatabaseUrl, {
-      max: 15, // 연결 풀 크기 증가 (5 → 15)
-      idle_timeout: 10, // 유휴 시간 단축 (20 → 10초)
-      connect_timeout: CONNECTION_TIMEOUT,
+      max: isVercel ? 5 : 15, // Vercel에서는 연결 풀 크기 제한
+      idle_timeout: isVercel ? 5 : 10, // Vercel에서는 더 짧은 유휴 시간
+      connect_timeout: isVercel ? 15000 : CONNECTION_TIMEOUT, // Vercel에서는 더 짧은 타임아웃
       ssl: 'require',
-      // 성능 최적화 옵션 추가
+      // Vercel 환경 최적화
       prepare: false, // prepared statements 비활성화로 초기 연결 속도 향상
       transform: {
         undefined: null, // undefined를 null로 변환하여 오류 방지
       },
       // 연결 재사용 최적화
       onnotice: () => {}, // 불필요한 notice 로그 제거
+      // Vercel 환경 특별 설정
+      ...(isVercel && {
+        max_lifetime: 60 * 10, // 10분 (Vercel 서버리스 함수 수명 고려)
+        backoff: 'exponential', // 지수 백오프
+        on_parameter_error: 'ignore', // 파라미터 오류 무시
+      }),
     });
     
     const db = drizzle(sql);

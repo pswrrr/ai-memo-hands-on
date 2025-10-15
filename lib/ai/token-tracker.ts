@@ -64,13 +64,24 @@ export class TokenTrackerService {
   };
 
   /**
-   * 토큰 사용량 기록
+   * 토큰 사용량 기록 (Vercel 환경 대응)
    */
   async recordTokenUsage(record: TokenUsageRecord): Promise<void> {
+    const startTime = Date.now();
+    
     try {
+      // 환경 변수 확인
+      if (!process.env.DATABASE_URL) {
+        console.warn('⚠️ DATABASE_URL이 설정되지 않았습니다.');
+        return;
+      }
+
       const cost = this.calculateCost(record.model, record.inputTokens, record.outputTokens);
       
-      await db.insert(tokenUsage).values({
+      // 데이터베이스 연결 테스트
+      await this.testDatabaseConnection();
+      
+      const insertResult = await db.insert(tokenUsage).values({
         userId: record.userId,
         noteId: record.noteId,
         model: record.model,
@@ -82,23 +93,134 @@ export class TokenTrackerService {
         processingTime: record.processingTime,
         success: record.success,
         errorMessage: record.errorMessage
+      }).returning({ id: tokenUsage.id });
+
+      const recordId = insertResult[0]?.id;
+      
+      if (!recordId) {
+        throw new Error('토큰 사용량 기록 삽입 실패');
+      }
+
+      // 성공 로깅
+      console.log(`✅ 토큰 사용량 기록 성공 (${Date.now() - startTime}ms)`, {
+        recordId,
+        userId: record.userId,
+        operation: record.operation,
+        totalTokens: record.totalTokens,
+        cost: cost,
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          VERCEL: process.env.VERCEL,
+          VERCEL_ENV: process.env.VERCEL_ENV
+        }
       });
 
-      // 로깅
-      await aiLogger.tokenUsage({
-        inputTokens: record.inputTokens,
-        outputTokens: record.outputTokens,
-        totalTokens: record.totalTokens,
-        cost,
-        operation: record.operation
-      }, { userId: record.userId, noteId: record.noteId });
+      // 로깅 (에러가 발생해도 메인 기능에 영향 없음)
+      try {
+        await aiLogger.tokenUsage({
+          inputTokens: record.inputTokens,
+          outputTokens: record.outputTokens,
+          totalTokens: record.totalTokens,
+          cost,
+          operation: record.operation
+        }, { userId: record.userId, noteId: record.noteId });
+      } catch (logError) {
+        console.warn('⚠️ 로깅 실패 (메인 기능에 영향 없음):', logError);
+      }
 
-      // 임계값 확인 및 알림
-      await this.checkThresholdsAndAlert(record.userId);
+      // 임계값 확인 및 알림 (에러가 발생해도 메인 기능에 영향 없음)
+      try {
+        await this.checkThresholdsAndAlert(record.userId);
+      } catch (alertError) {
+        console.warn('⚠️ 알림 확인 실패 (메인 기능에 영향 없음):', alertError);
+      }
       
     } catch (error) {
-      console.error('토큰 사용량 기록 실패:', error);
-      // 에러가 발생해도 메인 기능에 영향을 주지 않도록 함
+      const processingTime = Date.now() - startTime;
+      
+      console.error('❌ 토큰 사용량 기록 실패:', {
+        error: error instanceof Error ? error.message : '알 수 없는 오류',
+        stack: error instanceof Error ? error.stack : undefined,
+        record: {
+          userId: record.userId,
+          operation: record.operation,
+          totalTokens: record.totalTokens
+        },
+        processingTime,
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          VERCEL: process.env.VERCEL,
+          VERCEL_ENV: process.env.VERCEL_ENV,
+          DATABASE_URL_SET: !!process.env.DATABASE_URL
+        }
+      });
+
+      // Vercel 환경에서의 재시도 로직
+      if (this.isVercelEnvironment()) {
+        console.log('🔄 Vercel 환경에서 재시도 로직 실행...');
+        await this.retryTokenUsageRecord(record);
+      }
+    }
+  }
+
+  /**
+   * 데이터베이스 연결 테스트
+   */
+  private async testDatabaseConnection(): Promise<void> {
+    try {
+      await db.execute('SELECT 1');
+    } catch (error) {
+      throw new Error(`데이터베이스 연결 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  }
+
+  /**
+   * Vercel 환경 확인
+   */
+  private isVercelEnvironment(): boolean {
+    return !!(process.env.VERCEL || process.env.VERCEL_ENV);
+  }
+
+  /**
+   * 재시도 로직 (Vercel 환경 전용)
+   */
+  private async retryTokenUsageRecord(record: TokenUsageRecord): Promise<void> {
+    const maxRetries = 3;
+    const retryDelay = 1000; // 1초
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Vercel: 재시도 ${attempt}/${maxRetries}...`);
+        
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
+        
+        const cost = this.calculateCost(record.model, record.inputTokens, record.outputTokens);
+        
+        await db.insert(tokenUsage).values({
+          userId: record.userId,
+          noteId: record.noteId,
+          model: record.model,
+          operation: record.operation,
+          inputTokens: record.inputTokens,
+          outputTokens: record.outputTokens,
+          totalTokens: record.totalTokens,
+          cost: cost.toString(),
+          processingTime: record.processingTime,
+          success: record.success,
+          errorMessage: record.errorMessage
+        });
+
+        console.log(`✅ Vercel: 재시도 성공 (${attempt}번째 시도)`);
+        return;
+        
+      } catch (retryError) {
+        console.error(`❌ Vercel: 재시도 ${attempt} 실패:`, retryError);
+        
+        if (attempt === maxRetries) {
+          console.error('❌ Vercel: 모든 재시도 실패');
+          return;
+        }
+      }
     }
   }
 
