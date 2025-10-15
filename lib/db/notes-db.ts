@@ -678,6 +678,17 @@ async function getSummaryByNoteId(
     return undefined;
   }
 
+  // Supabase 응답을 Drizzle 스키마 형식으로 변환
+  if (data) {
+    return {
+      id: data.id,
+      noteId: data.note_id,
+      model: data.model,
+      content: data.content,
+      createdAt: new Date(data.created_at),
+    };
+  }
+
   return data;
 }
 

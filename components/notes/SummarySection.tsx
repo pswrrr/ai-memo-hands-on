@@ -19,7 +19,7 @@ interface SummaryData {
   id: string;
   content: string;
   model: string;
-  created_at: string;
+  createdAt: Date;
 }
 
 interface SummaryResult {
@@ -43,6 +43,33 @@ export default function SummarySection({ noteId, noteTitle }: SummarySectionProp
   const [editContent, setEditContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  // 안전한 날짜 포맷팅 함수
+  const formatDate = (date: string | Date | undefined | null) => {
+    try {
+      if (!date) {
+        return '날짜 없음';
+      }
+      
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      
+      if (!dateObj || isNaN(dateObj.getTime())) {
+        console.warn('Invalid date:', date);
+        return '날짜 없음';
+      }
+      
+      return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(dateObj);
+    } catch (error) {
+      console.error('날짜 포맷팅 오류:', error, date);
+      return '날짜 없음';
+    }
+  };
+
   // 컴포넌트 마운트 시 기존 요약 로드
   useEffect(() => {
     loadExistingSummary();
@@ -56,6 +83,12 @@ export default function SummarySection({ noteId, noteTitle }: SummarySectionProp
       const result = await getSummary(noteId);
       
       if (result.success && result.data) {
+        console.log('📅 요약 데이터 로드됨:', {
+          id: result.data.id,
+          createdAt: result.data.createdAt,
+          createdAt_type: typeof result.data.createdAt,
+          is_valid_date: result.data.createdAt instanceof Date && !isNaN(result.data.createdAt.getTime())
+        });
         setSummary(result.data);
       }
     } catch (err) {
@@ -280,7 +313,7 @@ export default function SummarySection({ noteId, noteTitle }: SummarySectionProp
               <h4 className="font-medium">기존 요약</h4>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">
-                  {new Date(summary.created_at).toLocaleDateString()}
+                  {formatDate(summary.createdAt)}
                 </Badge>
                 {!isEditing && (
                   <Button
