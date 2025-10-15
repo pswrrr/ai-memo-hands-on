@@ -1,5 +1,5 @@
 /**
- * 로깅 서비스
+ * 로깅 ?�비??
  */
 
 export enum LogLevel {
@@ -88,9 +88,8 @@ class Logger {
   private async writeToFile(entry: LogEntry): Promise<void> {
     if (!this.config.enableFile) return;
 
-    // TODO: 파일 로깅 구현
-    // 실제 환경에서는 winston, pino 등의 로깅 라이브러리 사용
-    console.log('File logging not implemented yet');
+    // TODO: ?�일 로깅 구현
+    // ?�제 ?�경?�서??winston, pino ?�의 로깅 ?�이브러�??�용
   }
 
   private async writeToRemote(entry: LogEntry): Promise<void> {
@@ -119,7 +118,7 @@ class Logger {
       context
     };
 
-    // 병렬로 모든 로깅 대상에 전송
+    // 병렬�?모든 로깅 ?�?�에 ?�송
     await Promise.allSettled([
       this.writeToConsole(entry),
       this.writeToFile(entry),
@@ -143,7 +142,7 @@ class Logger {
     await this.log(LogLevel.ERROR, message, context);
   }
 
-  // AI 관련 특화 로깅 메서드들
+  // AI 관???�화 로깅 메서?�들
   async logAIError(error: any, context?: Record<string, any>): Promise<void> {
     await this.error('AI processing error', {
       ...context,
@@ -191,7 +190,7 @@ class Logger {
   }
 }
 
-// 기본 로거 인스턴스
+// 기본 로거 ?�스?�스
 const defaultConfig: LoggerConfig = {
   level: process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG,
   enableConsole: true,
@@ -201,7 +200,7 @@ const defaultConfig: LoggerConfig = {
 
 export const logger = new Logger(defaultConfig);
 
-// 특화된 로거들
+// ?�화??로거??
 export const aiLogger = {
   error: (error: any, context?: Record<string, any>) => logger.logAIError(error, context),
   request: (request: any, context?: Record<string, any>) => logger.logAIRequest(request, context),
@@ -209,7 +208,7 @@ export const aiLogger = {
   tokenUsage: (usage: any, context?: Record<string, any>) => logger.logTokenUsage(usage, context)
 };
 
-// 유틸리티 함수들
+// ?�틸리티 ?�수??
 export function createRequestLogger(requestId: string) {
   return {
     debug: (message: string, context?: Record<string, any>) => 
@@ -235,4 +234,5 @@ export function createUserLogger(userId: string) {
       logger.error(message, { ...context, userId })
   };
 }
+
 

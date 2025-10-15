@@ -1,5 +1,5 @@
 /**
- * 토큰 사용량 추적 서비스
+ * ?�큰 ?�용??추적 ?�비??
  */
 
 import { db } from '../db';
@@ -7,7 +7,7 @@ import { tokenUsage, usageThresholds, usageAlerts, tokenUsageStats } from '../db
 import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
 import { aiLogger } from '../utils/logger';
 
-// 토큰 사용량 기록 인터페이스
+// ?�큰 ?�용??기록 ?�터?�이??
 export interface TokenUsageRecord {
   userId: string;
   noteId?: string;
@@ -22,7 +22,7 @@ export interface TokenUsageRecord {
   errorMessage?: string;
 }
 
-// 사용량 통계 인터페이스
+// ?�용???�계 ?�터?�이??
 export interface UsageStats {
   totalTokens: number;
   totalCost: number;
@@ -36,16 +36,16 @@ export interface UsageStats {
   };
 }
 
-// 임계값 설정 인터페이스
+// ?�계�??�정 ?�터?�이??
 export interface ThresholdConfig {
   userId: string;
   dailyLimit: number;
   monthlyLimit: number;
   alertEnabled: boolean;
-  alertThreshold: number; // 퍼센트
+  alertThreshold: number; // ?�센??
 }
 
-// 알림 정보 인터페이스
+// ?�림 ?�보 ?�터?�이??
 export interface AlertInfo {
   thresholdType: 'daily' | 'monthly';
   thresholdValue: number;
@@ -55,7 +55,7 @@ export interface AlertInfo {
 }
 
 export class TokenTrackerService {
-  // Gemini API 토큰 비용 (USD per 1M tokens)
+  // Gemini API ?�큰 비용 (USD per 1M tokens)
   private readonly TOKEN_COSTS = {
     'gemini-2.0-flash-exp': {
       input: 0.075, // $0.075 per 1M input tokens
@@ -64,7 +64,7 @@ export class TokenTrackerService {
   };
 
   /**
-   * 토큰 사용량 기록
+   * ?�큰 ?�용??기록
    */
   async recordTokenUsage(record: TokenUsageRecord): Promise<void> {
     try {
@@ -93,12 +93,12 @@ export class TokenTrackerService {
         operation: record.operation
       }, { userId: record.userId, noteId: record.noteId });
 
-      // 임계값 확인 및 알림
+      // ?�계�??�인 �??�림
       await this.checkThresholdsAndAlert(record.userId);
       
     } catch (error) {
-      console.error('토큰 사용량 기록 실패:', error);
-      // 에러가 발생해도 메인 기능에 영향을 주지 않도록 함
+      console.error('?�큰 ?�용??기록 ?�패:', error);
+      // ?�러가 발생?�도 메인 기능???�향??주�? ?�도�???
     }
   }
 
@@ -116,7 +116,7 @@ export class TokenTrackerService {
   }
 
   /**
-   * 사용자별 일일 사용량 조회
+   * ?�용?�별 ?�일 ?�용??조회
    */
   async getUserDailyUsage(userId: string, date: Date): Promise<UsageStats> {
     const startOfDay = new Date(date);
@@ -167,7 +167,7 @@ export class TokenTrackerService {
   }
 
   /**
-   * 사용자별 월간 사용량 조회
+   * ?�용?�별 ?�간 ?�용??조회
    */
   async getUserMonthlyUsage(userId: string, year: number, month: number): Promise<UsageStats> {
     const startOfMonth = new Date(year, month - 1, 1);
@@ -215,7 +215,7 @@ export class TokenTrackerService {
   }
 
   /**
-   * 전체 시스템 사용량 조회
+   * ?�체 ?�스???�용??조회
    */
   async getSystemUsage(period: 'daily' | 'weekly' | 'monthly', date: Date): Promise<UsageStats> {
     let startDate: Date;
@@ -284,7 +284,7 @@ export class TokenTrackerService {
   }
 
   /**
-   * 임계값 설정 조회
+   * ?�계�??�정 조회
    */
   async getThresholdConfig(userId: string): Promise<ThresholdConfig | null> {
     const result = await db
@@ -306,7 +306,7 @@ export class TokenTrackerService {
   }
 
   /**
-   * 임계값 설정 저장
+   * ?�계�??�정 ?�??
    */
   async setThresholdConfig(config: ThresholdConfig): Promise<void> {
     await db
@@ -331,13 +331,13 @@ export class TokenTrackerService {
   }
 
   /**
-   * 임계값 확인 및 알림
+   * ?�계�??�인 �??�림
    */
   private async checkThresholdsAndAlert(userId: string): Promise<void> {
     const config = await this.getThresholdConfig(userId);
     if (!config || !config.alertEnabled) return;
 
-    // 일일 사용량 확인
+    // ?�일 ?�용???�인
     const dailyUsage = await this.getUserDailyUsage(userId, new Date());
     const dailyPercentage = (dailyUsage.totalTokens / config.dailyLimit) * 100;
 
@@ -348,11 +348,11 @@ export class TokenTrackerService {
         thresholdValue: config.dailyLimit,
         currentUsage: dailyUsage.totalTokens,
         percentage: dailyPercentage,
-        message: `일일 토큰 사용량이 ${dailyPercentage.toFixed(1)}%에 도달했습니다.`
+        message: `?�일 ?�큰 ?�용?�이 ${dailyPercentage.toFixed(1)}%???�달?�습?�다.`
       });
     }
 
-    // 월간 사용량 확인
+    // ?�간 ?�용???�인
     const now = new Date();
     const monthlyUsage = await this.getUserMonthlyUsage(userId, now.getFullYear(), now.getMonth() + 1);
     const monthlyPercentage = (monthlyUsage.totalTokens / config.monthlyLimit) * 100;
@@ -364,13 +364,13 @@ export class TokenTrackerService {
         thresholdValue: config.monthlyLimit,
         currentUsage: monthlyUsage.totalTokens,
         percentage: monthlyPercentage,
-        message: `월간 토큰 사용량이 ${monthlyPercentage.toFixed(1)}%에 도달했습니다.`
+        message: `?�간 ?�큰 ?�용?�이 ${monthlyPercentage.toFixed(1)}%???�달?�습?�다.`
       });
     }
   }
 
   /**
-   * 알림 발송
+   * ?�림 발송
    */
   private async sendAlert(alertInfo: AlertInfo): Promise<void> {
     try {
@@ -382,16 +382,15 @@ export class TokenTrackerService {
         message: alertInfo.message
       });
 
-      // TODO: 실제 알림 발송 (이메일, 푸시 알림 등)
-      console.log(`Alert sent to user ${alertInfo.userId}: ${alertInfo.message}`);
+      // TODO: ?�제 ?�림 발송 (?�메?? ?�시 ?�림 ??
       
     } catch (error) {
-      console.error('알림 발송 실패:', error);
+      console.error('?�림 발송 ?�패:', error);
     }
   }
 
   /**
-   * 사용량 통계 캐시 업데이트
+   * ?�용???�계 캐시 ?�데?�트
    */
   async updateUsageStatsCache(userId: string, period: 'daily' | 'weekly' | 'monthly'): Promise<void> {
     const now = new Date();
@@ -451,6 +450,7 @@ export class TokenTrackerService {
   }
 }
 
-// 전역 토큰 추적 서비스 인스턴스
+// ?�역 ?�큰 추적 ?�비???�스?�스
 export const tokenTracker = new TokenTrackerService();
+
 

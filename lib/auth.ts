@@ -1,8 +1,6 @@
 // lib/auth.ts
-// Supabase Auth 관련 유틸리티 함수들을 담당하는 파일
-// 회원가입, 로그인, 로그아웃 등의 인증 기능을 제공합니다
-// 이 파일은 모든 인증 관련 컴포넌트에서 사용됩니다
-// 관련 파일: components/auth/SignupForm.tsx, components/auth/LoginForm.tsx, app/auth/signup/page.tsx
+// Supabase Auth 관???�틸리티 ?�수?�을 ?�당?�는 ?�일
+// ?�원가?? 로그?? 로그?�웃 ?�의 ?�증 기능???�공?�니??// ???�일?� 모든 ?�증 관??컴포?�트?�서 ?�용?�니??// 관???�일: components/auth/SignupForm.tsx, components/auth/LoginForm.tsx, app/auth/signup/page.tsx
 
 import { supabase } from './supabase';
 import { AuthError } from '@supabase/supabase-js';
@@ -17,12 +15,11 @@ export interface AuthResponse {
   };
 }
 
-// 회원가입 함수
+// ?�원가???�수
 export async function signUp(email: string, password: string): Promise<AuthResponse> {
   try {
-    console.log('회원가입 시도:', { email });
     
-    // 먼저 해당 이메일이 이미 존재하는지 확인
+    // 먼�? ?�당 ?�메?�이 ?��? 존재?�는지 ?�인
     const { data: existingUsers } = await supabase
       .from('auth.users')
       .select('email')
@@ -34,24 +31,22 @@ export async function signUp(email: string, password: string): Promise<AuthRespo
     });
 
     if (error) {
-      console.error('Supabase 회원가입 에러:', error);
+      console.error('Supabase ?�원가???�러:', error);
       return {
         success: false,
         error: getAuthErrorMessage(error),
       };
     }
 
-    // Supabase가 이메일 확인 대기 중인 임시 사용자를 생성하는 경우 체크
-    // identities가 비어있으면 이미 등록된 이메일일 가능성이 높음
+    // Supabase가 ?�메???�인 ?��?중인 ?�시 ?�용?��? ?�성?�는 경우 체크
+    // identities가 비어?�으�??��? ?�록???�메?�일 가?�성???�음
     if (data.user && data.user.identities && data.user.identities.length === 0) {
-      console.log('중복 이메일 감지: identities가 비어있음');
-      return {
+        return {
         success: false,
-        error: '이미 등록된 이메일입니다.',
+        error: '?��? ?�록???�메?�입?�다.',
       };
     }
 
-    console.log('회원가입 성공:', data.user);
     return {
       success: true,
       user: data.user ? {
@@ -60,42 +55,32 @@ export async function signUp(email: string, password: string): Promise<AuthRespo
       } : undefined,
     };
   } catch (error) {
-    console.error('회원가입 예외:', error);
+    console.error('?�원가???�외:', error);
     return {
       success: false,
-      error: '회원가입 중 오류가 발생했습니다.',
+      error: '?�원가??�??�류가 발생?�습?�다.',
     };
   }
 }
 
-// 로그인 함수
+// 로그???�수
 export async function signIn(email: string, password: string): Promise<AuthResponse> {
   try {
-    console.log('🔐 [lib/auth.ts] signIn 함수 시작');
-    console.log('입력 받은 이메일:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    console.log('Supabase signInWithPassword 응답:');
-    console.log('- data:', data);
-    console.log('- error:', error);
-    console.log('- data.session:', data?.session);
-    console.log('- data.user:', data?.user);
 
     if (error) {
-      console.error('로그인 에러 발생:', error);
+      console.error('로그???�러 발생:', error);
       return {
         success: false,
         error: getAuthErrorMessage(error),
       };
     }
 
-    console.log('✅ 로그인 성공! 세션 생성됨');
-    console.log('세션 정보:', data.session);
-    console.log('유저 정보:', data.user);
 
     return {
       success: true,
@@ -105,15 +90,15 @@ export async function signIn(email: string, password: string): Promise<AuthRespo
       } : undefined,
     };
   } catch (error) {
-    console.error('💥 signIn 함수에서 예외 발생:', error);
+    console.error('?�� signIn ?�수?�서 ?�외 발생:', error);
     return {
       success: false,
-      error: '로그인 중 오류가 발생했습니다.',
+      error: '로그??�??�류가 발생?�습?�다.',
     };
   }
 }
 
-// 로그아웃 함수
+// 로그?�웃 ?�수
 export async function signOut(): Promise<AuthResponse> {
   try {
     const { error } = await supabase.auth.signOut();
@@ -131,69 +116,58 @@ export async function signOut(): Promise<AuthResponse> {
   } catch (error) {
     return {
       success: false,
-      error: '로그아웃 중 오류가 발생했습니다.',
+      error: '로그?�웃 �??�류가 발생?�습?�다.',
     };
   }
 }
 
-// 비밀번호 재설정 요청 함수
+// 비�?번호 ?�설???�청 ?�수
 export async function resetPassword(email: string): Promise<AuthResponse> {
   try {
-    console.log('🔐 [lib/auth.ts] resetPassword 함수 시작');
-    console.log('입력 받은 이메일:', email);
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/update-password`,
     });
 
-    console.log('Supabase resetPasswordForEmail 응답:');
-    console.log('- error:', error);
 
     if (error) {
-      console.error('비밀번호 재설정 요청 에러 발생:', error);
+      console.error('비�?번호 ?�설???�청 ?�러 발생:', error);
       return {
         success: false,
         error: getAuthErrorMessage(error),
       };
     }
 
-    console.log('✅ 비밀번호 재설정 이메일 전송 성공');
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error('💥 resetPassword 함수에서 예외 발생:', error);
+    console.error('?�� resetPassword ?�수?�서 ?�외 발생:', error);
     return {
       success: false,
-      error: '비밀번호 재설정 중 오류가 발생했습니다.',
+      error: '비�?번호 ?�설??�??�류가 발생?�습?�다.',
     };
   }
 }
 
-// 비밀번호 업데이트 함수
+// 비�?번호 ?�데?�트 ?�수
 export async function updatePassword(newPassword: string): Promise<AuthResponse> {
   try {
-    console.log('🔐 [lib/auth.ts] updatePassword 함수 시작');
     
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
-    console.log('Supabase updateUser 응답:');
-    console.log('- data:', data);
-    console.log('- error:', error);
 
     if (error) {
-      console.error('비밀번호 업데이트 에러 발생:', error);
+      console.error('비�?번호 ?�데?�트 ?�러 발생:', error);
       return {
         success: false,
         error: getAuthErrorMessage(error),
       };
     }
 
-    console.log('✅ 비밀번호 업데이트 성공');
-    console.log('유저 정보:', data.user);
 
     return {
       success: true,
@@ -203,16 +177,15 @@ export async function updatePassword(newPassword: string): Promise<AuthResponse>
       } : undefined,
     };
   } catch (error) {
-    console.error('💥 updatePassword 함수에서 예외 발생:', error);
+    console.error('?�� updatePassword ?�수?�서 ?�외 발생:', error);
     return {
       success: false,
-      error: '비밀번호 변경 중 오류가 발생했습니다.',
+      error: '비�?번호 변�?�??�류가 발생?�습?�다.',
     };
   }
 }
 
-// 현재 사용자 정보 가져오기
-export async function getCurrentUser() {
+// ?�재 ?�용???�보 가?�오�?export async function getCurrentUser() {
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
     
@@ -226,7 +199,7 @@ export async function getCurrentUser() {
   }
 }
 
-// 인증 상태 변경 감지
+// ?�증 ?�태 변�?감�?
 export function onAuthStateChange(callback: (user: { id: string; email: string; [key: string]: unknown } | null) => void) {
   return supabase.auth.onAuthStateChange((event, session) => {
     if (session?.user) {
@@ -240,18 +213,17 @@ export function onAuthStateChange(callback: (user: { id: string; email: string; 
   });
 }
 
-// Supabase Auth 에러 메시지를 사용자 친화적인 메시지로 변환
-function getAuthErrorMessage(error: AuthError): string {
+// Supabase Auth ?�러 메시지�??�용??친화?�인 메시지�?변??function getAuthErrorMessage(error: AuthError): string {
   console.log('===== Supabase Auth Error =====');
-  console.log('원본 에러 메시지:', error.message);
-  console.log('에러 코드:', error.status);
-  console.log('전체 에러 객체:', error);
+  console.log('?�본 ?�러 메시지:', error.message);
+  console.log('?�러 코드:', error.status);
+  console.log('?�체 ?�러 객체:', error);
   console.log('==============================');
   
-  // 에러 메시지를 소문자로 변환하여 매칭
+  // ?�러 메시지�??�문?�로 변?�하??매칭
   const message = error.message.toLowerCase();
   
-  // 중복 이메일 관련 에러들 (더 포괄적으로 체크)
+  // 중복 ?�메??관???�러??(???�괄?�으�?체크)
   if (message.includes('user already registered') || 
       message.includes('email address is already registered') ||
       message.includes('user with this email already exists') ||
@@ -259,40 +231,37 @@ function getAuthErrorMessage(error: AuthError): string {
       message.includes('duplicate key') ||
       message.includes('already been registered') ||
       error.status === 422) {
-    return '이미 등록된 이메일입니다.';
+    return '?��? ?�록???�메?�입?�다.';
   }
   
-  // 이메일 형식 관련 에러들
-  if (message.includes('invalid email') || 
+  // ?�메???�식 관???�러??  if (message.includes('invalid email') || 
       message.includes('email format') ||
       message.includes('unable to validate email') ||
       message.includes('invalid email format')) {
-    return '올바른 이메일 형식을 입력해주세요.';
+    return '?�바�??�메???�식???�력?�주?�요.';
   }
   
-  // 비밀번호 관련 에러들
-  if (message.includes('password should be at least')) {
-    return '비밀번호는 최소 6자 이상이어야 합니다.';
+  // 비�?번호 관???�러??  if (message.includes('password should be at least')) {
+    return '비�?번호??최소 6???�상?�어???�니??';
   }
   
   if (message.includes('password is too weak')) {
-    return '비밀번호가 너무 약합니다. 영문, 숫자, 특수문자를 포함해주세요.';
+    return '비�?번호가 ?�무 ?�합?�다. ?�문, ?�자, ?�수문자�??�함?�주?�요.';
   }
   
-  // 기타 인증 에러들
-  if (message.includes('invalid login credentials')) {
-    return '이메일 또는 비밀번호가 올바르지 않습니다.';
+  // 기�? ?�증 ?�러??  if (message.includes('invalid login credentials')) {
+    return '?�메???�는 비�?번호가 ?�바르�? ?�습?�다.';
   }
   
   if (message.includes('email not confirmed')) {
-    return '이메일 인증이 필요합니다.';
+    return '?�메???�증???�요?�니??';
   }
   
-  // 네트워크 에러
+  // ?�트?�크 ?�러
   if (message.includes('network') || message.includes('connection')) {
-    return '네트워크 연결을 확인해주세요.';
+    return '?�트?�크 ?�결???�인?�주?�요.';
   }
   
-  // 기본 에러 메시지 (원본 메시지가 있으면 사용, 없으면 기본 메시지)
-  return error.message || '회원가입 중 오류가 발생했습니다.';
+  // 기본 ?�러 메시지 (?�본 메시지가 ?�으�??�용, ?�으�?기본 메시지)
+  return error.message || '?�원가??�??�류가 발생?�습?�다.';
 }
