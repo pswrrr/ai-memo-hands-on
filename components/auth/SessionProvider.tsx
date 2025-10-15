@@ -15,13 +15,10 @@ interface SessionProviderProps {
 
 export default function SessionProvider({ children }: SessionProviderProps) {
   useEffect(() => {
-    console.log('🔧 [SessionProvider] 세션 동기화 설정 시작');
-    
     // 다중 탭 간 세션 동기화 설정
     const cleanup = setupSessionSync();
     
     return () => {
-      console.log('🧹 [SessionProvider] 세션 동기화 정리');
       cleanup?.();
     };
   }, []);
