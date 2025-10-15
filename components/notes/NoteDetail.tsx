@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Trash2, Calendar, Clock } from 'lucide-react';
 import NoteEditForm from './NoteEditForm';
 import DeleteConfirmDialog from './DeleteConfirmDialog';
+import SummarySection from './SummarySection';
+import TagsSection from './TagsSection';
 
 interface Note {
   id: string;
@@ -31,32 +33,48 @@ export default function NoteDetail({ note }: NoteDetailProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // 날짜 포맷팅
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+  const formatDate = (date: Date | string) => {
+    try {
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) {
+        return '날짜 정보 없음';
+      }
+      return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(dateObj);
+    } catch (error) {
+      return '날짜 정보 없음';
+    }
   };
 
   // 상대 시간 포맷팅
-  const formatRelativeTime = (date: Date) => {
-    const now = new Date();
-    const diffInMs = now.getTime() - new Date(date).getTime();
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
+  const formatRelativeTime = (date: Date | string) => {
+    try {
+      const now = new Date();
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) {
+        return '날짜 정보 없음';
+      }
+      const diffInMs = now.getTime() - dateObj.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      const diffInDays = Math.floor(diffInHours / 24);
 
-    if (diffInMinutes < 1) return '방금 전';
-    if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
-    if (diffInHours < 24) return `${diffInHours}시간 전`;
-    if (diffInDays < 7) return `${diffInDays}일 전`;
-    return formatDate(date);
+      if (diffInMinutes < 1) return '방금 전';
+      if (diffInMinutes < 60) return `${diffInMinutes}분 전`;
+      if (diffInHours < 24) return `${diffInHours}시간 전`;
+      if (diffInDays < 7) return `${diffInDays}일 전`;
+      return formatDate(date);
+    } catch (error) {
+      return '날짜 정보 없음';
+    }
   };
 
-  const isRecentlyUpdated = note.updatedAt.getTime() !== note.createdAt.getTime();
+  const isRecentlyUpdated = new Date(note.updatedAt).getTime() !== new Date(note.createdAt).getTime();
 
   // 편집 모드 토글
   const handleEdit = () => {
@@ -136,6 +154,20 @@ export default function NoteDetail({ note }: NoteDetailProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* AI 요약 섹션 */}
+        {note.content && note.content.trim().length > 0 && (
+          <div className="mt-8">
+            <SummarySection noteId={note.id} noteTitle={note.title} />
+          </div>
+        )}
+
+        {/* AI 태그 섹션 */}
+        {note.content && note.content.trim().length > 0 && (
+          <div className="mt-6">
+            <TagsSection noteId={note.id} />
+          </div>
+        )}
 
         {/* 메타데이터 */}
         <div className="mt-6 text-sm text-gray-500">

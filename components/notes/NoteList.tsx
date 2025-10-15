@@ -139,8 +139,8 @@ export default function NoteList() {
             id={note.id}
             title={note.title}
             content={note.content}
-            createdAt={note.createdAt}
-            updatedAt={note.updatedAt}
+            createdAt={note.created_at}
+            updatedAt={note.updated_at}
           />
         ))}
       </div>

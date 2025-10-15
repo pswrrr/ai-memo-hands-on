@@ -34,20 +34,44 @@ export default function NoteCard({
     '내용이 없습니다';
 
   // 날짜 포맷팅
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }).format(new Date(date));
+  const formatDate = (date: Date | string | undefined | null) => {
+    try {
+      if (!date) {
+        return '날짜 없음';
+      }
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (!dateObj || isNaN(dateObj.getTime())) {
+        return '날짜 없음';
+      }
+      return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }).format(dateObj);
+    } catch (error) {
+      console.error('날짜 포맷팅 오류:', error, date);
+      return '날짜 없음';
+    }
   };
 
   // 시간 포맷팅
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+  const formatTime = (date: Date | string | undefined | null) => {
+    try {
+      if (!date) {
+        return '시간 없음';
+      }
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      if (!dateObj || isNaN(dateObj.getTime())) {
+        return '시간 없음';
+      }
+      return new Intl.DateTimeFormat('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(dateObj);
+    } catch (error) {
+      console.error('시간 포맷팅 오류:', error, date);
+      return '시간 없음';
+    }
   };
 
   return (
@@ -67,7 +91,7 @@ export default function NoteCard({
               <Calendar className="h-3 w-3" />
               <span>{formatDate(createdAt)}</span>
             </div>
-            {updatedAt.getTime() !== createdAt.getTime() && (
+            {updatedAt && createdAt && new Date(updatedAt).getTime() !== new Date(createdAt).getTime() && (
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 <span>{formatTime(updatedAt)}</span>

@@ -13,6 +13,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Save, X } from 'lucide-react';
+import RichTextEditor from './RichTextEditor';
+import MarkdownEditor from './MarkdownEditor';
+import AdvancedToolbar from './AdvancedToolbar';
 import { useAutoSave, SaveStatus } from '@/hooks/useAutoSave';
 import { updateNote } from '@/app/actions/notes';
 import SaveStatusIndicator from './SaveStatusIndicator';
@@ -37,6 +40,7 @@ export default function NoteEditForm({ note, onCancel }: NoteEditFormProps) {
   const [content, setContent] = useState(note.content || '');
   const [isManualSaving, setIsManualSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [editorMode, setEditorMode] = useState<'rich' | 'markdown'>('rich');
 
   // 변경사항 감지
   useEffect(() => {
@@ -155,25 +159,69 @@ export default function NoteEditForm({ note, onCancel }: NoteEditFormProps) {
 
             {/* 본문 입력 */}
             <div className="space-y-2">
-              <Label htmlFor="content" className="text-sm font-medium">
-                본문
-              </Label>
-              <Textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="노트 내용을 입력하세요"
-                rows={15}
-                maxLength={10000}
-                className={!isContentValid ? 'border-red-500' : ''}
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="content" className="text-sm font-medium">
+                  본문
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={editorMode === 'rich' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setEditorMode('rich')}
+                    className="text-xs"
+                  >
+                    리치 텍스트
+                  </Button>
+                  <Button
+                    variant={editorMode === 'markdown' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setEditorMode('markdown')}
+                    className="text-xs"
+                  >
+                    마크다운
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                {/* 고급 편집 도구 툴바 */}
+                <AdvancedToolbar
+                  content={content}
+                  onContentChange={setContent}
+                  onSave={handleManualSave}
+                />
+                
+                {/* 에디터 */}
+                {editorMode === 'rich' ? (
+                  <RichTextEditor
+                    value={content}
+                    onChange={setContent}
+                    placeholder="노트 내용을 입력하세요"
+                    maxLength={10000}
+                    rows={15}
+                    className={!isContentValid ? 'border-red-500' : ''}
+                  />
+                ) : (
+                  <MarkdownEditor
+                    value={content}
+                    onChange={setContent}
+                    placeholder="마크다운을 입력하세요"
+                    maxLength={10000}
+                    rows={15}
+                    className={!isContentValid ? 'border-red-500' : ''}
+                  />
+                )}
+              </div>
+              
               <div className="flex justify-between text-xs text-gray-500">
                 <span>
                   {!isContentValid && (
                     <span className="text-red-500">본문은 10,000자를 초과할 수 없습니다</span>
                   )}
                 </span>
-                <span>{content.length}/10,000</span>
+                <div className="text-xs text-gray-500">
+                  <span>{editorMode === 'rich' ? '리치 텍스트 편집기' : '마크다운 편집기'} 사용 중</span>
+                </div>
               </div>
             </div>
 
