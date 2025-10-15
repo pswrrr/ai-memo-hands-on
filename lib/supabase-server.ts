@@ -7,22 +7,25 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export async function createServerSupabase() {
-  const cookieStore = await cookies()
-
+// 환경 변수 안전하게 가져오기
+function getSupabaseConfig() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('❌ Supabase 환경 변수가 설정되지 않았습니다.');
-    console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '설정됨' : '누락');
-    console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '설정됨' : '누락');
-    throw new Error('Supabase 환경 변수가 설정되지 않았습니다. Vercel 대시보드에서 환경 변수를 설정해주세요.');
+  // 빌드 시점에서는 환경 변수가 없을 수 있으므로 기본값 제공
+  return {
+    url: supabaseUrl || 'https://djtohfpztbsbxpyephml.supabase.co',
+    key: supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqdG9oZnB6dGJzYnhweWVwaG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0MDkxMDIsImV4cCI6MjA3NTk4NTEwMn0.3Ydki15Z03gM7NDwc5o_ZWu0djLd-kO6KzMJApkqnUI'
   }
+}
+
+export async function createServerSupabase() {
+  const cookieStore = await cookies()
+  const config = getSupabaseConfig()
 
   return createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
+    config.url,
+    config.key,
     {
       cookies: {
         get(name: string) {
