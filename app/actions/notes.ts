@@ -1,6 +1,6 @@
 'use server';
 
-import { notesDb } from '@/lib/db/supabase-db';
+import { notesDb } from '@/lib/db/notes-db';
 import { createNoteSchema, updateNoteSchema, deleteNoteSchema, NOTE_ERROR_MESSAGES } from '@/lib/validations/notes';
 import { createServerSupabase } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';

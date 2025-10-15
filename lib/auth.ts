@@ -226,6 +226,33 @@ export async function getCurrentUser() {
   }
 }
 
+// 사용자가 관리자인지 확인
+export async function isAdmin(): Promise<boolean> {
+  try {
+    const user = await getCurrentUser();
+    
+    if (!user) {
+      return false;
+    }
+    
+    // user_metadata에서 role 확인
+    const role = user.user_metadata?.role;
+    return role === 'admin';
+  } catch (error) {
+    console.error('관리자 확인 중 오류:', error);
+    return false;
+  }
+}
+
+// 특정 사용자가 관리자인지 확인 (user 객체를 받는 버전)
+export function checkUserIsAdmin(user: { user_metadata?: { role?: string; [key: string]: unknown }; [key: string]: unknown } | null): boolean {
+  if (!user) {
+    return false;
+  }
+  
+  return user.user_metadata?.role === 'admin';
+}
+
 // 인증 상태 변경 감지
 export function onAuthStateChange(callback: (user: { id: string; email: string; [key: string]: unknown } | null) => void) {
   return supabase.auth.onAuthStateChange((event, session) => {

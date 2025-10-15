@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import { signIn } from '@/lib/auth';
+import { signIn, getCurrentUser } from '@/lib/auth';
 import { validateLoginForm, type LoginFormData } from '@/lib/validations';
 import Link from 'next/link';
 
@@ -94,16 +94,30 @@ export default function LoginForm() {
       
       if (result.success) {
         console.log('✅ 로그인 성공!');
-        // 로그인 성공 메시지 표시
-        setSuccessMessage('로그인 성공! 잠시 후 메인 페이지로 이동합니다.');
         
-        // 1초 후 메인 페이지로 리다이렉트
-        setTimeout(() => {
-          console.log('🚀 메인 페이지로 리다이렉트 실행');
-          console.log('현재 URL:', window.location.href);
-          // window.location을 사용하여 강제로 페이지 전체를 새로고침
-          window.location.href = '/';
-        }, 1000);
+        // 사용자 정보를 가져와서 역할 확인
+        const user = await getCurrentUser();
+        const isAdmin = user?.user_metadata?.role === 'admin';
+        
+        if (isAdmin) {
+          console.log('🔑 관리자 계정으로 로그인됨');
+          setSuccessMessage('관리자로 로그인 성공! 관리자 대시보드로 이동합니다.');
+          
+          // 1초 후 관리자 대시보드로 리다이렉트
+          setTimeout(() => {
+            console.log('🚀 관리자 대시보드로 리다이렉트');
+            window.location.href = '/admin/token-usage';
+          }, 1000);
+        } else {
+          console.log('👤 일반 사용자로 로그인됨');
+          setSuccessMessage('로그인 성공! 잠시 후 메인 페이지로 이동합니다.');
+          
+          // 1초 후 메인 페이지로 리다이렉트
+          setTimeout(() => {
+            console.log('🚀 메인 페이지로 리다이렉트');
+            window.location.href = '/';
+          }, 1000);
+        }
       } else {
         console.error('❌ 로그인 실패:', result.error);
         setSubmitError(result.error || '로그인에 실패했습니다.');

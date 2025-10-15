@@ -1,11 +1,11 @@
 import { updateTags } from '@/app/actions/notes';
 import { createServerSupabase } from '@/lib/supabase-server';
-import { notesDb } from '@/lib/db/supabase-db';
+import { notesDb } from '@/lib/db/notes-db';
 import { revalidatePath } from 'next/cache';
 
 // Mock dependencies
 jest.mock('@/lib/supabase-server');
-jest.mock('@/lib/db/supabase-db');
+jest.mock('@/lib/db/notes-db');
 jest.mock('next/cache');
 
 const mockCreateServerSupabase = createServerSupabase as jest.MockedFunction<typeof createServerSupabase>;

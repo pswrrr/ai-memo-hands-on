@@ -3,11 +3,11 @@
  */
 
 import { regenerateAI } from '@/app/actions/notes';
-import { notesDb } from '@/lib/db/supabase-db';
+import { notesDb } from '@/lib/db/notes-db';
 import { getGeminiClient, validateEnvironment } from '@/lib/ai/gemini';
 
 // 모킹
-jest.mock('@/lib/db/supabase-db');
+jest.mock('@/lib/db/notes-db');
 jest.mock('@/lib/ai/gemini');
 jest.mock('@/lib/supabase-server', () => ({
   createServerSupabase: jest.fn(() => ({

@@ -15,6 +15,11 @@ const protectedRoutes = [
   '/settings'
 ];
 
+// 관리자 전용 라우트 목록
+const adminRoutes = [
+  '/admin'
+];
+
 // 인증이 필요 없는 라우트 목록
 const publicRoutes = [
   '/',
@@ -40,12 +45,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 관리자 전용 라우트 확인
+  const isAdminRoute = adminRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+
   // 보호된 라우트 확인
   const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)
   );
 
-  if (!isProtectedRoute) {
+  if (!isProtectedRoute && !isAdminRoute) {
     return NextResponse.next();
   }
 
@@ -56,6 +66,16 @@ export async function middleware(request: NextRequest) {
 
     if (error || !user) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
+
+    // 관리자 전용 라우트 접근 체크
+    if (isAdminRoute) {
+      const isAdmin = user.user_metadata?.role === 'admin';
+      
+      if (!isAdmin) {
+        // 관리자가 아니면 대시보드로 리다이렉트
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
     }
     
     // 인증된 사용자의 경우 온보딩 완료 여부 확인

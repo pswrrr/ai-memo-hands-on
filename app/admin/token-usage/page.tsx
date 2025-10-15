@@ -1,10 +1,13 @@
 /**
  * 토큰 사용량 관리자 대시보드
+ * 관리자 권한이 있는 사용자만 접근 가능
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +39,7 @@ interface UsageStats {
 
 interface UserUsage {
   userId: string;
+  userEmail: string;
   totalTokens: number;
   totalCost: number;
   requestCount: number;
@@ -55,12 +59,14 @@ interface AlertInfo {
 }
 
 export default function TokenUsageDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [userRankings, setUserRankings] = useState<UserUsage[]>([]);
   const [recentAlerts, setRecentAlerts] = useState<AlertInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   // 데이터 로드
   const loadData = async () => {
@@ -68,65 +74,34 @@ export default function TokenUsageDashboard() {
       setLoading(true);
       setError(null);
 
-      // TODO: 실제 API 호출로 데이터 로드
-      // const response = await fetch(`/api/analytics/token-usage?period=${timeRange}`);
-      // const data = await response.json();
+      // 실제 API 호출로 데이터 로드
+      const response = await fetch(`/api/admin/token-usage?period=${timeRange}`);
+      
+      if (!response.ok) {
+        throw new Error('데이터 로드 실패');
+      }
+      
+      const data = await response.json();
 
-      // 임시 데이터 (실제 구현 시 제거)
-      const mockStats: UsageStats = {
-        totalTokens: 125000,
-        totalCost: 0.45,
-        requestCount: 156,
-        successCount: 142,
-        errorCount: 14,
-        avgProcessingTime: 2500,
+      // 응답 데이터 파싱
+      setStats({
+        ...data.stats,
         period: {
-          start: new Date(Date.now() - 24 * 60 * 60 * 1000),
-          end: new Date()
+          start: new Date(data.stats.period.start),
+          end: new Date(data.stats.period.end)
         }
-      };
+      });
 
-      const mockUserRankings: UserUsage[] = [
-        {
-          userId: 'user-001',
-          totalTokens: 45000,
-          totalCost: 0.18,
-          requestCount: 45,
-          lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000)
-        },
-        {
-          userId: 'user-002',
-          totalTokens: 32000,
-          totalCost: 0.13,
-          requestCount: 32,
-          lastActivity: new Date(Date.now() - 4 * 60 * 60 * 1000)
-        },
-        {
-          userId: 'user-003',
-          totalTokens: 28000,
-          totalCost: 0.11,
-          requestCount: 28,
-          lastActivity: new Date(Date.now() - 6 * 60 * 60 * 1000)
-        }
-      ];
+      setUserRankings(data.userRankings.map((user: any) => ({
+        ...user,
+        lastActivity: new Date(user.lastActivity)
+      })));
 
-      const mockAlerts: AlertInfo[] = [
-        {
-          id: 'alert-001',
-          userId: 'user-001',
-          thresholdType: 'daily',
-          thresholdValue: 50000,
-          currentUsage: 45000,
-          percentage: 90,
-          message: '일일 토큰 사용량이 90%에 도달했습니다.',
-          alertSentAt: new Date(Date.now() - 30 * 60 * 1000),
-          status: 'sent'
-        }
-      ];
+      setRecentAlerts(data.recentAlerts.map((alert: any) => ({
+        ...alert,
+        alertSentAt: new Date(alert.alertSentAt)
+      })));
 
-      setStats(mockStats);
-      setUserRankings(mockUserRankings);
-      setRecentAlerts(mockAlerts);
     } catch (err) {
       setError('데이터를 불러오는 중 오류가 발생했습니다.');
       console.error('데이터 로드 실패:', err);
@@ -135,9 +110,42 @@ export default function TokenUsageDashboard() {
     }
   };
 
+  // 관리자 권한 확인
   useEffect(() => {
-    loadData();
-  }, [timeRange]);
+    const checkAdminAccess = async () => {
+      try {
+        const user = await getCurrentUser();
+        
+        if (!user) {
+          // 로그인하지 않은 경우
+          router.push('/auth/login');
+          return;
+        }
+        
+        const isAdmin = user.user_metadata?.role === 'admin';
+        
+        if (!isAdmin) {
+          // 관리자가 아닌 경우 대시보드로 리다이렉트
+          router.push('/dashboard');
+          return;
+        }
+        
+        // 관리자인 경우
+        setIsAuthorized(true);
+      } catch (err) {
+        console.error('권한 확인 중 오류:', err);
+        router.push('/auth/login');
+      }
+    };
+    
+    checkAdminAccess();
+  }, [router]);
+
+  useEffect(() => {
+    if (isAuthorized) {
+      loadData();
+    }
+  }, [timeRange, isAuthorized]);
 
   // 데이터 내보내기
   const handleExport = async () => {
@@ -157,6 +165,18 @@ export default function TokenUsageDashboard() {
     console.log('설정 열기');
     alert('설정 기능은 준비 중입니다.');
   };
+
+  // 권한 확인 중이거나 인증되지 않은 경우
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>권한을 확인하는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -338,9 +358,14 @@ export default function TokenUsageDashboard() {
                     {index + 1}
                   </div>
                   <div>
-                    <p className="font-medium">사용자 {user.userId}</p>
+                    <p className="font-medium">{user.userEmail}</p>
                     <p className="text-sm text-muted-foreground">
-                      마지막 활동: {user.lastActivity.toLocaleString()}
+                      마지막 활동: {user.lastActivity.toLocaleString('ko-KR', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
                     </p>
                   </div>
                 </div>

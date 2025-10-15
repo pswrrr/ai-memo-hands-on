@@ -1,0 +1,118 @@
+// 데이터베이스 연결 관리 유틸리티
+// DATABASE_URL 직접 연결만 사용하는 단순화된 연결 관리
+
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+
+// 연결 상태 캐시
+let connectionStatus: 'unknown' | 'direct' = 'unknown';
+let cachedConnection: any = null;
+let lastHealthCheck: Date | null = null;
+const HEALTH_CHECK_INTERVAL = 300000; // 5분
+const CONNECTION_TIMEOUT = 30000; // 30초
+
+export async function getDatabaseConnection() {
+  // 캐시된 연결이 있고 건강한 경우 반환
+  if (cachedConnection && connectionStatus !== 'unknown' && lastHealthCheck) {
+    const timeSinceLastCheck = Date.now() - lastHealthCheck.getTime();
+    if (timeSinceLastCheck < HEALTH_CHECK_INTERVAL) {
+      return cachedConnection;
+    }
+  }
+
+  // DATABASE_URL 직접 연결만 사용
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL 환경 변수가 설정되지 않았습니다.');
+  }
+
+  try {
+    console.log('🔄 DATABASE_URL 직접 연결 시도...');
+    
+    const sql = postgres(databaseUrl, {
+      max: 5,
+      idle_timeout: 20,
+      connect_timeout: CONNECTION_TIMEOUT,
+      ssl: 'require',
+    });
+    
+    const db = drizzle(sql);
+    
+    // 연결 테스트 (타임아웃 설정)
+    const testPromise = sql`SELECT 1 as test, now() as current_time`;
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), CONNECTION_TIMEOUT)
+    );
+    
+    await Promise.race([testPromise, timeoutPromise]);
+    
+    connectionStatus = 'direct';
+    cachedConnection = { type: 'direct', connection: db, sql };
+    lastHealthCheck = new Date();
+    console.log('✅ DATABASE_URL 직접 연결 성공');
+    return cachedConnection;
+  } catch (error) {
+    console.error('❌ DATABASE_URL 직접 연결 실패:', error instanceof Error ? error.message : '알 수 없는 오류');
+    throw new Error(`데이터베이스 연결 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+  }
+}
+
+export function getConnectionStatus() {
+  return connectionStatus;
+}
+
+export function clearConnectionCache() {
+  connectionStatus = 'unknown';
+  cachedConnection = null;
+  lastHealthCheck = null;
+}
+
+// 연결 상태 모니터링
+export async function checkConnectionHealth(): Promise<boolean> {
+  try {
+    const connection = await getDatabaseConnection();
+    await connection.sql`SELECT 1`;
+    lastHealthCheck = new Date();
+    return true;
+  } catch (error) {
+    console.error('❌ 연결 상태 확인 실패:', error);
+    clearConnectionCache();
+    return false;
+  }
+}
+
+// 연결 재시도
+export async function reconnectDatabase() {
+  console.log('🔄 데이터베이스 재연결 시도...');
+  clearConnectionCache();
+  return await getDatabaseConnection();
+}
+
+// 연결 정보 가져오기
+export function getConnectionInfo() {
+  return {
+    status: connectionStatus,
+    lastHealthCheck,
+    isHealthy: lastHealthCheck && (Date.now() - lastHealthCheck.getTime()) < HEALTH_CHECK_INTERVAL
+  };
+}
+
+// 직접 연결을 통한 쿼리 실행 헬퍼
+export async function executeQuery(query: string, params: any[] = []) {
+  const connection = await getDatabaseConnection();
+  return await connection.sql.unsafe(query, params);
+}
+
+// 테이블 존재 확인 헬퍼
+export async function checkTableExists(tableName: string): Promise<boolean> {
+  const connection = await getDatabaseConnection();
+  
+  const result = await connection.sql`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name = ${tableName}
+    )
+  `;
+  return result[0]?.exists || false;
+}
