@@ -20,15 +20,17 @@ function getSupabaseConfig() {
     }
   }
 
-  // 클라이언트 사이드에서는 환경 변수 필수
+  // 클라이언트 사이드에서도 기본값 사용
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('❌ Supabase 환경 변수가 설정되지 않았습니다.');
-    console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '설정됨' : '누락');
-    console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '설정됨' : '누락');
-    throw new Error('Supabase 환경 변수가 설정되지 않았습니다. Vercel 대시보드에서 환경 변수를 설정해주세요.');
+    console.warn('⚠️ Supabase 환경 변수가 설정되지 않았습니다. 기본값을 사용합니다.');
+    console.warn('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '설정됨' : '누락');
+    console.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '설정됨' : '누락');
   }
 
-  return { url: supabaseUrl, key: supabaseAnonKey }
+  return { 
+    url: supabaseUrl || 'https://djtohfpztbsbxpyephml.supabase.co',
+    key: supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqdG9oZnB6dGJzYnhweWVwaG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0MDkxMDIsImV4cCI6MjA3NTk4NTEwMn0.3Ydki15Z03gM7NDwc5o_ZWu0djLd-kO6KzMJApkqnUI'
+  }
 }
 
 const config = getSupabaseConfig()
