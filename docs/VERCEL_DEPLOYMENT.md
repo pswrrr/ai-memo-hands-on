@@ -13,13 +13,6 @@ Vercel 대시보드에서 다음 환경 변수들을 설정해야 합니다:
 
 다음 환경 변수들을 **모든 환경** (Production, Preview, Development)에 설정:
 
-```
-NEXT_PUBLIC_SUPABASE_URL=https://djtohfpztbsbxpyephml.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqdG9oZnB6dGJzYnhweWVwaG1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0MDkxMDIsImV4cCI6MjA3NTk4NTEwMn0.3Ydki15Z03gM7NDwc5o_ZWu0djLd-kO6KzMJApkqnUI
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqdG9oZnB6dGJzYnhweWVwaG1sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDQwOTEwMiwiZXhwIjoyMDc1OTg1MTAyfQ.RdBY17KiPUIVKZ-WJTAnSQUX2k8vDWpu0jZxK61XqIY
-DATABASE_URL=postgresql://postgres.djtohfpztbsbxpyephml:BpklBPjFD7zNibEF@aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres?sslmode=require
-GEMINI_API_KEY=AIzaSyCGx08N4Hz5-3ji177q_IF5xELi0sXvZyM
-```
 
 ### 3. 환경 변수 설정 방법
 
